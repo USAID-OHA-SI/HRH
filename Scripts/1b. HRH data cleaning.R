@@ -1,5 +1,5 @@
 ### THE PURPOSE OF THIS SCRIPT IS TO DO SOME DATA CLEANING OF THE RAW HRH DATASET
-### NOTE: All Scripts upload to github now for version control purposes
+### NOTE: All scripts now uploaded to github
 
 ## 1.installing and loading relevant packages/libraries
 library(readxl)
