@@ -1,5 +1,6 @@
-### THE PURPOSE OF THIS SCRIPT IS TO DO SOME DATA CLEANING OF THE RAW HRH DATASET
-### NOTE: All scripts now uploaded to github
+### THE PURPOSE OF THIS SCRIPT IS TO DO INITIAL DATA CLEANING OF THE RAW HRH DATASET.
+### Code developed by: Kyle Borces
+### Last updated: January 17, 2023
 
 ## 1.installing and loading relevant packages/libraries
 library(readxl)
