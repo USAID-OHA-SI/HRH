@@ -28,6 +28,7 @@ Data/*
 1. Data/*
 3. Tableau/*
 4. Outputs/*
+
 #no data
 *.csv
 *.gz
@@ -52,9 +53,6 @@ Data/*
 *.dta
 *.shp
 *.dbf
-
-
-
 
 #nothing from these folders
 AI/*
