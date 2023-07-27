@@ -52,6 +52,8 @@ Graphics/*
 *.dta
 *.shp
 *.dbf
+*.prj
+*.shx
 
 #nothing from these folders
 AI/*
