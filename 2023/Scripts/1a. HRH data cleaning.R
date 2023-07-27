@@ -1,6 +1,6 @@
-### THE PURPOSE OF THIS SCRIPT IS TO DO INITIAL DATA CLEANING OF THE RAW HRH DATASET.
+### THE PURPOSE OF THIS SCRIPT IS TO DO INITIAL DATA CLEANING OF THE RAW FY23HRH DATASET.
 ### Code developed by: Kyle Borces
-### Last updated: January 17, 2023
+### Last updated: July 2023
 
 ## 1.installing and loading relevant packages/libraries
 library(readxl)
@@ -12,8 +12,8 @@ library(sqldf)
 library(janitor)
 
 ## Uploading files
-HRH_data_orig <- read_excel("./1. Data/HRH_Structured_Datasets_Site_IM_FY21-22_not_redacted_20230117_Adjusted.xlsx") # read in from NGA post-cleaning dataset
-localPartner <- read_excel("./1. Data/PartnerType for Tableau.xlsx") #import local dataset
+HRH_data_orig <- read_excel("./2023/Data/HRH_Structured_Datasets_Site_IM_FY21-22_not_redacted_20230117_Adjusted.xlsx") # read in from NGA post-cleaning dataset
+localPartner <- read_excel("./2023/Data/PartnerType for Tableau.xlsx") #import local dataset
 
 ## Perform a left join of the local partner dataset
 HRH_data_orig$mech_code <- as.numeric(HRH_data_orig$mech_code) # set as numeric first
