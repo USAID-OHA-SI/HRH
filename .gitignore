@@ -2,11 +2,13 @@
 .Rhistory
 .RData
 .Ruserdata
+
 #R basics
 .Rproj.user
 .Rhistory
 .RData
 .Ruserdata
+
 #no data
 *.csv
 *.txt
@@ -18,7 +20,7 @@
 *.twbx
 *.pptx
 
-#nothing from these folders
+#Nothing from these folders
 AI/*
 GIS/*
 Images/*
@@ -27,6 +29,8 @@ Graphics/*
 1. Data/*
 3. Tableau/*
 4. Outputs/*
+Data/*
+Dataout/*
 
 #no data
 *.csv
@@ -54,11 +58,3 @@ Graphics/*
 *.dbf
 *.prj
 *.shx
-
-#nothing from these folders
-AI/*
-GIS/*
-Images/*
-Graphics/*
-Data/*
-Dataout/*
