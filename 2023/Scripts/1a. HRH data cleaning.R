@@ -59,10 +59,37 @@ HRH_clean <- HRH_clean %>%
                                     TRUE ~ "Other agencies"))
 
 # creating an .rds file for use in analysis of FY22 HRH data
-save(HRH_clean, file = "./4. Outputs/RDS/FY22_cleanHRH.rds")
+save(HRH_clean, file = "./2023/Dataout/FY22_cleanHRH.rds")
+
+# Create a data frame that replicates the 2022 entries and append to the original HRH dataset
+dummy23 <- HRH_clean %>%
+  filter(fiscal_year == 2022) %>%
+  mutate(fiscal_year = 2023)
+HRH_dummy23 <- rbind(HRH_clean, dummy23)
+
+## Create a dummy dataset with 2023 data that slightly changes the expenditure columns by 5-10%
+HRH_dummy23$factor_salary <- sample(seq(0.96, 1.10, by = 0.01),replace = T, nrow(HRH_dummy23))
+HRH_dummy23$factor_fringe <- sample(seq(0.96, 1.10, by = 0.01),replace = T, nrow(HRH_dummy23))
+HRH_dummy23$factor_nonMonetary <- sample(seq(0.96, 1.10, by = 0.01),replace = T, nrow(HRH_dummy23))
+
+# Set all NA values in expenditure columns to zero
+HRH_dummy23$annual_expenditure[is.na(HRH_dummy23$annual_expenditure)] <- 0
+HRH_dummy23$annual_fringe[is.na(HRH_dummy23$annual_fringe)] <- 0
+HRH_dummy23$actual_non_monetary_expenditure[is.na(HRH_dummy23$actual_non_monetary_expenditure)] <- 0
+
+# Revise the 2023 dummy data
+HRH_dummy23 <- HRH_dummy23 %>%
+  mutate(annual_expenditure = case_when(fiscal_year == 2023 ~ annual_expenditure * factor_salary, TRUE ~ annual_expenditure),
+         annual_fringe = case_when(fiscal_year == 2023 ~ annual_fringe * factor_fringe, TRUE ~ annual_fringe),
+         actual_non_monetary_expenditure = case_when(fiscal_year == 2023 ~ actual_non_monetary_expenditure * factor_nonMonetary, TRUE ~ actual_non_monetary_expenditure),
+         actual_annual_spend = case_when(fiscal_year == 2023 ~ annual_expenditure + annual_fringe + actual_non_monetary_expenditure))
+
+#remove the factors
+HRH_dummy23 <- HRH_dummy23 %>%
+  select(-factor_salary, -factor_fringe, -factor_nonMonetary)
 
 ## 4. Export to Excel
-write_xlsx(HRH_clean,"./1. Data/HRH_Structured_Datasets_Site_IM_FY21-22_not_redacted_20230118_PostClean_Adjusted.xlsx") 
+write.csv(HRH_dummy23,"./2023/Dataout/HRH_Structured_Datasets_Site_IM_FY21-23_not_redacted_2023DUMMY.csv") 
 
 
 
