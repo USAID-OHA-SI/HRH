@@ -2,8 +2,6 @@
 ### Code developed by: Kyle Borces
 ### Last updated: January 17, 2023
 
-### WHAT IS GOING ON
-
 ## 1.installing and loading relevant packages/libraries
 library(readxl)
 library(writexl)
