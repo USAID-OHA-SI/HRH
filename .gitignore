@@ -19,6 +19,7 @@
 *.png
 *.twbx
 *.pptx
+*.Rproj
 
 #Nothing from these folders
 AI/*
