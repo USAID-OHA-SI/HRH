@@ -27,12 +27,14 @@ GIS/*
 Images/*
 Graphics/*
 
-1. Data/*
+
 Data/*
-3. Tableau/*
 Tableau/*
-4. Outputs/*
 Dataout/*
+
+1. Data/*
+3. Tableau/*
+4. Outputs/*
 
 #no data
 *.csv
