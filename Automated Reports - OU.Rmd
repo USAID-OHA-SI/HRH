@@ -21,6 +21,7 @@ library(readxl)
 library(writexl)
 library(ggplot2)
 library(shiny)
+library(tidyquant)
 
 ```
 
@@ -66,4 +67,117 @@ ggplot(HRH_reports, aes(x = reorder(funding_agency, -actual_annual_spend), y = a
 
 ```
 
+## Create a test dual-axis plot
+
+```{r, echo = FALSE, eval = TRUE}
+
+# Transformer Function ----
+transformer_dual_y_axis <- function(data,
+                                    primary_column, secondary_column,
+                                    include_y_zero = FALSE) {
+
+    # PARAMETER SETUP
+    params_tbl <- data %>%
+        summarise(
+            max_primary   = max(!! enquo(primary_column)),
+            min_primary   = min(!! enquo(primary_column)),
+            max_secondary = max(!! enquo(secondary_column)),
+            min_secondary = min(!! enquo(secondary_column))
+        )
+
+    if (include_y_zero) {
+        params_tbl$min_primary   <- 0
+        params_tbl$min_secondary <- 0
+    }
+
+    params_tbl <- params_tbl %>%
+        mutate(
+            scale = (max_secondary - min_secondary) / (max_primary - min_primary),
+            shift = min_primary - min_secondary
+        )
+
+    # MAKE SCALER FUNCTIONS
+    scale_func <- function(x) {
+        x * params_tbl$scale - params_tbl$shift
+    }
+
+    inv_func <- function(x) {
+        (x + params_tbl$shift) / params_tbl$scale
+    }
+
+    # RETURN
+    ret <- list(
+        scale_func = scale_func,
+        inv_func   = inv_func,
+        params_tbl = params_tbl
+    )
+
+    return(ret)
+}
+
+# Create a df that shows HRH expenditure and individual count by program area
+dual_axis <- HRH_clean %>%
+  filter(fiscal_year == 2023) %>%
+  filter(funding_agency == "USAID") %>%
+  filter(operating_unit == params$operating_unit) %>%
+  filter(!program == "Error") %>%
+  select(fiscal_year, funding_agency, program, actual_annual_spend, individual_count) %>%
+  group_by(program) %>%
+  summarise(actual_annual_spend = sum(actual_annual_spend, na.rm = T),
+            individual_count = sum(individual_count, na.rm = T)) %>%
+  arrange(desc(individual_count)) 
+
+# Make A Y-Axis Transformer
+transformer <- dual_axis %>%
+    transformer_dual_y_axis(
+        primary_column   = individual_count,
+        secondary_column = actual_annual_spend,
+        include_y_zero   = TRUE
+    )
+
+# Make the first plot
+
+g1 <- dual_axis %>%
+    ggplot(aes(x = reorder(program, -individual_count))) +
+    geom_col(
+        aes(y = individual_count, fill = "Individual Count"),
+        alpha = 0.9
+    ) +
+    geom_label(
+        aes(
+            y     = individual_count,
+            label = individual_count,
+            color = "Individual Count"
+        )
+    )
+
+# * 3.2 SECONDARY AXIS ----
+
+g2 <- g1 +
+    geom_point(
+        aes(y     = transformer$inv_func(actual_annual_spend),
+            color = "HRH Expenditure"),
+        size = 4
+    ) +
+    geom_label(
+        aes(
+            y     = transformer$inv_func(actual_annual_spend),
+            label = actual_annual_spend,
+            color = "HRH Expenditure"
+        ),
+        size = 3,
+        nudge_y = 300
+    ) +
+
+    scale_y_continuous(
+        name     = "Individual Count",
+        sec.axis = sec_axis(
+            trans = ~ transformer$scale_func(.),
+            name  = "Total HRH Expenditure"
+        )
+    ) 
+
+g2
+
+```
 
