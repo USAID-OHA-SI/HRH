@@ -1,0 +1,69 @@
+---
+title: "Automated Reports - OU"
+author: "Kyle Borces"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output: word_document
+params: 
+  operating_unit: !r c("Tanzania", "Eswatini", "Lesotho")
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE) # supress code
+knitr::opts_chunk$set(warning = FALSE, message = FALSE) # suppress all warnings
+#knitr::opts_chunk$set(dpi=300) # set high resolution of plots
+
+library(plyr)
+library(dplyr)
+library(tidyverse)
+library(sqldf)
+library(janitor)
+library(readxl)
+library(writexl)
+library(ggplot2)
+library(shiny)
+
+```
+
+## Automated reports at OU level
+
+This is the initial proof of concept of creating an automated OU report using 
+The HRH inventory dataset
+
+```{r}
+
+# Load the FSD and HRH dataset
+fin_data_orig <- read.delim("./1. Data/Financial_Structured_Datasets_COP17-23_20231215.txt") 
+load(file = "./4. Outputs/RDS/FY23_cleanHRH.rds") 
+
+```
+
+## Create a test plot using the HRH dataset
+
+
+```{r, echo = FALSE, eval = TRUE}
+#fig1, fig.height = 5, fig.width = 4,
+# Create the plot
+HRH_reports <- HRH_clean %>%
+  filter(fiscal_year == 2023) %>%
+  filter(operating_unit == params$operating_unit) %>%
+  select(fiscal_year, funding_agency, actual_annual_spend) %>%
+  group_by(fiscal_year, funding_agency) %>%
+  summarise(actual_annual_spend = sum(actual_annual_spend, na.rm = T)) %>%
+  arrange(desc(actual_annual_spend))
+
+ggplot(HRH_reports, aes(x = reorder(funding_agency, -actual_annual_spend), y = actual_annual_spend, fill = funding_agency)) +
+  geom_bar(stat = "identity", width = 0.6, col = "black", size = 0.3) +
+  geom_text(aes(label = paste(round(actual_annual_spend / 1e6, 1), "M"), vjust=-0.5), size = 3) +
+  labs(title = stringr::str_glue("Total HRH Expenditure by agency in {params$operating_unit}")) +
+  theme(panel.grid = element_blank(), panel.background = element_rect(fill = "white"),
+        axis.line=element_blank(),
+        #axis.text.x=element_blank(),
+        axis.text.y=element_blank(),
+        axis.ticks=element_blank(),
+        axis.title.x=element_blank(),
+        axis.title.y=element_blank(),legend.position ="none",
+        plot.title = element_text(size = 10)) 
+
+```
+
+
