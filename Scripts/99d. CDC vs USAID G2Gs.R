@@ -32,7 +32,7 @@ USAID_mechs <- HRH_clean %>%
 ## Avg individual count
 CDC_count <- HRH_clean %>%
   filter(fiscal_year == 2023,
-         partner_org_type == "Government Agency") %>%
+         g2g_partner_type == "Government Agency") %>%
   group_by(funding_agency, mech_code) %>%
   summarise(sum_fte = sum(annual_fte, na.rm = T)) %>%
   ungroup() %>%
@@ -43,7 +43,7 @@ CDC_count <- HRH_clean %>%
 ## Avg HRH expenditure size
 CDC_expenditure <- HRH_clean %>%
   filter(fiscal_year == 2023,
-         partner_org_type == "Government Agency") %>%
+         g2g_partner_type == "Government Agency") %>%
   group_by(funding_agency, mech_code) %>%
   summarise(sum_expenditure = sum(actual_annual_spend, na.rm = T)) %>%
   ungroup() %>%
@@ -54,7 +54,7 @@ CDC_expenditure <- HRH_clean %>%
 ## Look into HRH as % of total G2G expenditure
 G2G_mechs <- HRH_clean %>%
   filter(fiscal_year == 2023,
-         partner_org_type == "Government Agency") %>%
+         g2g_partner_type == "Government Agency") %>%
   mutate(mech_code_dedup = duplicated(mech_code)) %>%
   filter(mech_code_dedup == FALSE) %>%
   pull(mech_code)
@@ -67,7 +67,7 @@ ER_G2Gs <- fin_data_orig %>%
 
 HRH_G2Gs <- HRH_clean %>%
   filter(fiscal_year == 2023,
-         partner_org_type == "Government Agency") %>%
+         g2g_partner_type == "Government Agency") %>%
   group_by(funding_agency, mech_code) %>%
   summarise(actual_annual_spend = sum(actual_annual_spend, na.rm = T))
 
@@ -81,13 +81,13 @@ merged_G2G <- left_join(HRH_G2Gs, ER_G2Gs, by = "mech_code") %>%
 ## Average staffing mix 
 CDC_mix_expenditure <- HRH_clean %>%
   filter(fiscal_year == 2023,
-         partner_org_type == "Government Agency") %>%
+         g2g_partner_type == "Government Agency") %>%
   group_by(funding_agency, mech_code, er_category) %>%
   summarise(sum_expenditure = sum(actual_annual_spend, na.rm = T)) 
 
 CDC_mix_expenditure_total <- HRH_clean %>%
   filter(fiscal_year == 2023,
-         partner_org_type == "Government Agency") %>%
+         g2g_partner_type == "Government Agency") %>%
   group_by(funding_agency, mech_code) %>%
   summarise(sum_expenditure_total = sum(actual_annual_spend, na.rm = T))
 
@@ -111,13 +111,13 @@ CDC_mix_expenditure <- CDC_mix_expenditure %>% # Now find the average % of total
 # fte
 CDC_mix_fte <- HRH_clean %>%
   filter(fiscal_year == 2023,
-         partner_org_type == "Government Agency") %>%
+         g2g_partner_type == "Government Agency") %>%
   group_by(funding_agency, mech_code, er_category) %>%
   summarise(sum_fte = sum(annual_fte, na.rm = T)) 
 
 CDC_mix_fte_total <- HRH_clean %>%
   filter(fiscal_year == 2023,
-         partner_org_type == "Government Agency") %>%
+         g2g_partner_type == "Government Agency") %>%
   group_by(funding_agency, mech_code) %>%
   summarise(sum_fte_total = sum(annual_fte, na.rm = T))
 
@@ -142,13 +142,13 @@ CDC_mix_fte <- CDC_mix_fte %>% # Now find the average % of total
 
 CDC_SD_NSD_expenditure <- HRH_clean %>%
   filter(fiscal_year == 2023,
-         partner_org_type == "Government Agency") %>%
+         g2g_partner_type == "Government Agency") %>%
   group_by(funding_agency, mech_code, interaction_type) %>%
   summarise(sum_expenditure = sum(actual_annual_spend, na.rm = T)) 
 
 CDC_SD_NSD_expenditure_total <- HRH_clean %>%
   filter(fiscal_year == 2023,
-         partner_org_type == "Government Agency") %>%
+         g2g_partner_type == "Government Agency") %>%
   group_by(funding_agency, mech_code) %>%
   summarise(sum_expenditure_total = sum(actual_annual_spend, na.rm = T))
 
@@ -174,13 +174,13 @@ CDC_SD_NSD_expenditure <- CDC_SD_NSD_expenditure %>% # Now find the average % of
 
 CDC_SD_NSD_fte <- HRH_clean %>%
   filter(fiscal_year == 2023,
-         partner_org_type == "Government Agency") %>%
+         g2g_partner_type == "Government Agency") %>%
   group_by(funding_agency, mech_code, interaction_type) %>%
   summarise(sum_fte = sum(annual_fte, na.rm = T)) 
 
 CDC_SD_NSD_fte_total <- HRH_clean %>%
   filter(fiscal_year == 2023,
-         partner_org_type == "Government Agency") %>%
+         g2g_partner_type == "Government Agency") %>%
   group_by(funding_agency, mech_code) %>%
   summarise(sum_fte_total = sum(annual_fte, na.rm = T))
 
@@ -206,14 +206,14 @@ CDC_SD_NSD_fte <- CDC_SD_NSD_fte %>% # Now find the average % of total
 
 PM_secondment_expenditure <- HRH_clean %>%
   filter(fiscal_year == 2023,
-         partner_org_type == "Government Agency",
+         g2g_partner_type == "Government Agency",
          er_category == "Program Management") %>%
   group_by(funding_agency, mech_code, moh.secondment) %>%
   summarise(sum_expenditure = sum(actual_annual_spend, na.rm = T)) 
 
 PM_secondment_expenditure_total <- HRH_clean %>%
   filter(fiscal_year == 2023,
-         partner_org_type == "Government Agency",
+         g2g_partner_type == "Government Agency",
          er_category == "Program Management") %>%
   group_by(funding_agency, mech_code) %>%
   summarise(sum_expenditure_total = sum(actual_annual_spend, na.rm = T))
@@ -251,7 +251,7 @@ ER_G2Gs <- fin_data_orig %>%
 
 HRH_G2Gs <- HRH_clean %>%
   filter(fiscal_year == 2023,
-         partner_org_type == "Government Agency") %>%
+         g2g_partner_type == "Government Agency") %>%
   group_by(fiscal_year, operating_unit, mech_code) %>%
   summarise(actual_annual_spend = sum(actual_annual_spend, na.rm = T))
 
@@ -259,7 +259,7 @@ merged_G2G <- left_join(ER_G2Gs, HRH_G2Gs, by = c("fiscal_year", "operating_unit
   rename(ER_expenditure_amt = expenditure_amt,
          HRH_expenditure_amt = actual_annual_spend) %>%
   mutate(ER_topline = ER_expenditure_amt - HRH_expenditure_amt) %>%
-  mutate(partner_org_type = "Government Agency") %>%
+  mutate(g2g_partner_type = "Government Agency") %>%
   select(-ER_expenditure_amt, -HRH_expenditure_amt) %>%
   rename(actual_annual_spend = ER_topline) %>%
   mutate(ER_topline = "TRUE") %>%
@@ -276,13 +276,13 @@ write.csv(HRH_ERtopline, "./1. Data/HRH_ER_topline_G2Gs_20240424.csv", row.names
 ## Average staffing mix 
 topline_exp <- HRH_ERtopline %>%
   filter(fiscal_year == 2023,
-         partner_org_type == "Government Agency") %>%
+         g2g_partner_type == "Government Agency") %>%
   group_by(funding_agency, mech_code, er_category) %>%
   summarise(sum_expenditure = sum(actual_annual_spend, na.rm = T)) 
 
 topline_exp_total <- HRH_ERtopline %>%
   filter(fiscal_year == 2023,
-         partner_org_type == "Government Agency") %>%
+         g2g_partner_type == "Government Agency") %>%
   group_by(funding_agency, mech_code) %>%
   summarise(sum_expenditure_total = sum(actual_annual_spend, na.rm = T))
 
@@ -311,4 +311,37 @@ avg_g2g <- topline_exp %>%
   group_by(funding_agency) %>%
   summarise(avg_expenditure = mean(total_expenditure, na.rm = T))
 
-# 
+
+####  For countries with G2G mecanisms, what % of their HRH is going to G2G mechs on average?
+G2G_OUs <- HRH_clean %>%
+  filter(fiscal_year == 2023) %>%
+  filter(funding_agency != "Other agencies") %>%
+  group_by(operating_unit, g2g_partner_type) %>%
+  summarise(HRH_G2Gs = sum(individual_count, na.rm = T)) %>%
+  filter(g2g_partner_type == "Government Agency") %>%
+  pull(operating_unit)
+
+G2G_totals <- HRH_clean %>% # for later use
+  filter(fiscal_year == 2023) %>%
+  filter(funding_agency != "Other agencies") %>%
+  filter(g2g_partner_type == "Government Agency" | is.na(g2g_partner_type) == TRUE) %>%
+  filter(operating_unit %in% G2G_OUs) %>%
+  group_by(operating_unit,funding_agency) %>%
+  summarise(HRH_G2Gs = sum(individual_count, na.rm = T)) 
+
+HRH_asPCT_ofG2G <- HRH_clean %>%
+  filter(fiscal_year == 2023) %>%
+  filter(g2g_partner_type == "Government Agency" | is.na(g2g_partner_type) == TRUE) %>%
+  filter(operating_unit %in% G2G_OUs) %>%
+  filter(funding_agency != "Other agencies") %>%
+  group_by(fiscal_year, funding_agency,operating_unit, g2g_partner_type) %>%
+  summarise(G2G_totalHRH = sum(individual_count, na.rm = T)) %>%
+  mutate(g2g_partner_type = if_else(is.na(g2g_partner_type) == TRUE, "Non-G2G", g2g_partner_type))
+
+HRH_asPCT_ofG2G <- left_join(HRH_asPCT_ofG2G, G2G_totals, by = c("operating_unit", "funding_agency")) %>%
+  mutate(pct_of_total = G2G_totalHRH / HRH_G2Gs)
+
+avg_pct_HRH <- HRH_asPCT_ofG2G %>%
+  group_by(fiscal_year, funding_agency, g2g_partner_type) %>%
+  summarise(avg_pct_HRH = mean(pct_of_total, na.rm = T))
+

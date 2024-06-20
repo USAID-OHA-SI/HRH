@@ -1,16 +1,16 @@
 ---
-title: "Automated Reports - OU"
+title: "FY23 HRH Inventory Summary Report - "
 author: "Kyle Borces"
 date: "`r format(Sys.time(), '%d %B, %Y')`"
 output: word_document
 params: 
-  operating_unit: !r c("Tanzania", "Eswatini", "Lesotho")
+  operating_unit: !r c("Tanzania")
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE) # supress code
 knitr::opts_chunk$set(warning = FALSE, message = FALSE) # suppress all warnings
-#knitr::opts_chunk$set(dpi=300) # set high resolution of plots
+knitr::opts_chunk$set(dpi=300) # set high resolution of plots
 
 library(plyr)
 library(dplyr)
@@ -19,31 +19,33 @@ library(sqldf)
 library(janitor)
 library(readxl)
 library(writexl)
-library(ggplot2)
 library(shiny)
+library(scales)
 library(tidyquant)
+library(formattable)
+library(kableExtra)
 
 ```
 
 ## Automated reports at OU level
 
-This is the initial proof of concept of creating an automated OU report using 
-The HRH inventory dataset
+This provides a detailed summary of the FY23 HRH Inventory dataset. These reports help summarize staffing investments and trends at the country level to inform current programming, and facilitate HRH planning.
 
 ```{r}
 
 # Load the FSD and HRH dataset
 fin_data_orig <- read.delim("./1. Data/Financial_Structured_Datasets_COP17-23_20231215.txt") 
 load(file = "./4. Outputs/RDS/FY23_cleanHRH.rds") 
+load(file = "./4. Outputs/RDS/HRH_ER_merged_21_23.rds") 
 
 ```
 
-## Create a test plot using the HRH dataset
+## Create the first plot using the HRH dataset
 
 
 ```{r, echo = FALSE, eval = TRUE}
-#fig1, fig.height = 5, fig.width = 4,
-# Create the plot
+
+# Create the first plot
 HRH_reports <- HRH_clean %>%
   filter(fiscal_year == 2023) %>%
   filter(operating_unit == params$operating_unit) %>%
@@ -58,12 +60,13 @@ ggplot(HRH_reports, aes(x = reorder(funding_agency, -actual_annual_spend), y = a
   labs(title = stringr::str_glue("Total HRH Expenditure by agency in {params$operating_unit}")) +
   theme(panel.grid = element_blank(), panel.background = element_rect(fill = "white"),
         axis.line=element_blank(),
-        #axis.text.x=element_blank(),
         axis.text.y=element_blank(),
         axis.ticks=element_blank(),
         axis.title.x=element_blank(),
         axis.title.y=element_blank(),legend.position ="none",
-        plot.title = element_text(size = 10)) 
+        plot.title = element_text(size = 10)) +
+  
+  scale_fill_manual(values = c("#BA0C2F", "#8C8985", "#002F6C"))
 
 ```
 
@@ -71,7 +74,7 @@ ggplot(HRH_reports, aes(x = reorder(funding_agency, -actual_annual_spend), y = a
 
 ```{r, echo = FALSE, eval = TRUE}
 
-# Transformer Function ----
+## Create a Transformer Function to be used by the rest of the dual axis plots ----
 transformer_dual_y_axis <- function(data,
                                     primary_column, secondary_column,
                                     include_y_zero = FALSE) {
@@ -115,6 +118,10 @@ transformer_dual_y_axis <- function(data,
     return(ret)
 }
 
+```
+
+```{r fig2, fig.height = 5, fig.width = 8, echo = FALSE, eval = TRUE}
+
 # Create a df that shows HRH expenditure and individual count by program area
 dual_axis <- HRH_clean %>%
   filter(fiscal_year == 2023) %>%
@@ -126,6 +133,14 @@ dual_axis <- HRH_clean %>%
   summarise(actual_annual_spend = sum(actual_annual_spend, na.rm = T),
             individual_count = sum(individual_count, na.rm = T)) %>%
   arrange(desc(individual_count)) 
+
+# Create % of total table for inline text later
+dual_axis_pct_PM <- dual_axis %>%
+  adorn_percentages("col") %>%
+  mutate(actual_annual_spend = round(actual_annual_spend * 100),
+         individual_count = round(individual_count * 100)) %>%
+  filter(program == "PM") %>%
+  pull(actual_annual_spend)
 
 # Make A Y-Axis Transformer
 transformer <- dual_axis %>%
@@ -146,9 +161,10 @@ g1 <- dual_axis %>%
     geom_label(
         aes(
             y     = individual_count,
-            label = individual_count,
-            color = "Individual Count"
-        )
+            label = scales::comma(round(individual_count)),
+            color = "Individual Count",
+        ),
+        size = 3
     )
 
 # * 3.2 SECONDARY AXIS ----
@@ -162,22 +178,94 @@ g2 <- g1 +
     geom_label(
         aes(
             y     = transformer$inv_func(actual_annual_spend),
-            label = actual_annual_spend,
-            color = "HRH Expenditure"
-        ),
+            label = scales::dollar(round(actual_annual_spend)),
+            color = "HRH Expenditure"),
         size = 3,
         nudge_y = 300
-    ) +
-
+    ) + 
+  
+  
+#scale_y_continuous(labels = scales::comma)
     scale_y_continuous(
         name     = "Individual Count",
+        labels = scales::comma,
         sec.axis = sec_axis(
             trans = ~ transformer$scale_func(.),
-            name  = "Total HRH Expenditure"
+            name  = "Total HRH Expenditure",
+            labels = scales::dollar
         )
-    ) 
+    ) +
+  
+  labs(title = stringr::str_glue("Individual Count and HRH Expenditure by Program Area in {params$operating_unit}")) +
+  
+  theme(panel.grid = element_blank(), panel.background = element_rect(fill = "white"),
+        axis.line=element_blank(),
+        #axis.text.x=element_blank(),
+        axis.text.y=element_blank(),
+        axis.ticks=element_blank(),
+        axis.title.x=element_blank(),
+        axis.title.y=element_blank(),
+        plot.title = element_text(size = 10)) 
 
-g2
+g3 <- g2 +
+    theme_tq() +
+    scale_color_manual(values = c(
+        palette_light()[["red"]],
+        palette_light()[["blue"]]
+    )) +
+    scale_fill_manual(values = palette_light()[["blue"]]) +
+    theme(
+        legend.position    = "none",
+        axis.title.y.right = element_text(color = palette_light()[["red"]]),
+        axis.text.y.right  = element_text(color = palette_light()[["red"]]),
+        axis.title.x=element_blank()
+    )
+
+g3
 
 ```
 
+In `r params$operating_unit`, Program Management comprised about `r dual_axis_pct_PM`% of their total HRH expenditure
+
+
+## USAID and CDC HRH Inventory Submission Rate
+This shows the number of mechanisms that submitted both ER and HRH templates to better understand the overall completeness/reliability of the dataset for `r params$operating_unit`
+
+```{r, echo = FALSE, eval = TRUE}
+
+
+mech_submissions <- finalMerge %>%
+  filter(year == 2023) %>%
+  filter(GHSC_UN_keywordflags == "FALSE") %>% # excluding all GHSC and UN mechanisms
+  filter(operating_unit == params$operating_unit) %>%
+  group_by(year, operating_unit, funding_agency, mech_code) %>%
+  summarise(HRH_expenditure_amt = sum(HRH_expenditure_amt, na.rm = T), 
+            ER_expenditure_amt = sum(ER_expenditure_amt[HRH_relevant == "Y"], na.rm = T)) %>%
+  ungroup() %>%
+  group_by(funding_agency) %>%
+  summarise(Num_HRH_submissions = length(mech_code[HRH_expenditure_amt > 0]),
+            Num_ER_submissions = length(mech_code[ER_expenditure_amt > 0]),
+            HRH_expenditure_amt = sum(HRH_expenditure_amt, na.rm = T),
+            ER_expenditure_amt = sum(ER_expenditure_amt, na.rm = T)) %>%
+  ungroup() %>%
+  arrange(desc(HRH_expenditure_amt)) %>%
+  adorn_totals() %>%
+  mutate(pct_submission_rate = HRH_expenditure_amt / ER_expenditure_amt) %>%
+  
+  # format the columns
+  mutate(across(4:5, formattable::currency,digits=0)) %>%
+  mutate(across(6, formattable::percent, digits=0))
+
+
+knitr::kable(mech_submissions, "simple", 
+             col.names=c("Funding Agency", "No. of HRH Submissions", "No. of ER Submissions", 
+                         "HRH Expenditure Amount (USD)", "ER Expenditure Amount   (USD", "Overall Submission Rate (%)"),
+             caption = "Submission Rate by Agency")
+
+# Create a table that re-creates the content for "Tanzania by the numbers" infographic
+
+
+
+# NEXT STEPS: figure out how to export a nicely formatted df to the word doc
+
+```

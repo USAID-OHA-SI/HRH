@@ -16,6 +16,7 @@ HRH_data_orig_21 <- read.delim("./1. Data/HRH_Structured_Datasets_Site_IM_FY21_n
 
 ## EDIT: import also the CDC CoAg list
 CoAg <- read_excel("./1. Data/COP21-22 CDC G2G and parastatals.xlsx")
+CoAg_USAID <- read_excel("./1. Data/COP21-22 USAID G2G and parastatals.xlsx")
 
 ## Row bind all three years
 HRH_clean <- rbind(HRH_data_orig_23, HRH_data_orig_22, HRH_data_orig_21)
@@ -83,11 +84,30 @@ HRH_clean <- HRH_clean %>%
                                     funding_agency == "HHS/CDC" ~ "CDC",
                                     TRUE ~ "Other agencies"))
 
+# Merge the G2G partners for both CDC and USAID
+CoAg <- CoAg %>%
+  select(`Mechanism ID`, `Partner Org Type (revised)`) %>%
+  rename(mech_code = `Mechanism ID`,
+         g2g_partner_type = `Partner Org Type (revised)`)
+CoAg$mech_code <- as.integer(CoAg$mech_code)
+
+CoAg_USAID <- CoAg_USAID %>%
+  select(`Mechanism ID`, `Partner Org Type (revised)`) %>%
+  rename(mech_code = `Mechanism ID`,
+         g2g_partner_type = `Partner Org Type (revised)`)
+CoAg_USAID$mech_code <- as.integer(CoAg_USAID$mech_code)
+
+HRH_clean <- left_join(HRH_clean, CoAg, by = "mech_code")
+HRH_clean <- left_join(HRH_clean, CoAg_USAID, by = "mech_code")
+HRH_clean <- HRH_clean %>%
+  mutate(g2g_partner_type = if_else(is.na(g2g_partner_type.x) == TRUE, g2g_partner_type.y, g2g_partner_type.x)) %>%
+  select(-g2g_partner_type.x, -g2g_partner_type.y)
+
 # creating an .rds file for use in analysis of FY22 HRH data
 save(HRH_clean, file = "./4. Outputs/RDS/FY23_cleanHRH.rds")
 
 ## 4. Export as csv
-write.csv(HRH_clean, "./1. Data/HRH_Structured_Datasets_Site_IM_FY21-23_not_redacted_20231127_CLEAN.csv", row.names=FALSE)
+write.csv(HRH_clean, "./1. Data/HRH_Structured_Datasets_Site_IM_FY21-23_not_redacted_20240603_CLEAN.csv", row.names=FALSE)
 
 
 
