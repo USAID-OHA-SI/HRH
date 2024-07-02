@@ -650,7 +650,7 @@ g3
 This box plot shows the range of annual remuneration (i.e. annual salary) of the top employment titles
 
 
-```{r fig5, fig.height = 5, fig.width = 8, echo = FALSE, eval = TRUE}
+```{r fig5, fig.height = 7, fig.width = 9, echo = FALSE, eval = TRUE}
 
 # Prepare the remuneration data frame
 remuneration <- HRH_clean %>%
@@ -702,20 +702,14 @@ remuneration <- remuneration %>%
   filter(employment_title %in% sort_list)
 
 # Create the box plot
-boxplot2 <- ggplot(remuneration, aes(x=reorder(employment_title, -equivalent_annual_salary, FUN = median), y=equivalent_annual_salary)) + 
-  geom_boxplot()
+boxplot2 <- ggplot(remuneration, aes(x=reorder(employment_title, equivalent_annual_salary, FUN = median), y=equivalent_annual_salary)) + 
+  geom_boxplot(fill = NA, coef = 0)
 
-boxplot2
+boxplot2 + coord_flip() + labs(x = "Employment Title", y = "Median Annual Remuneration") + geom_jitter(aes(colour = class), width = 0.3, fill = 'lightblue')
 
-# NEXT STEPS: To wrap the x-label employment titles more, to show median values, re-label the x-axis, show the dots
+# NEXT STEPS: Complete the rest of the bar graphs, including stacked bar graphs!!
 
-# Box plot with dot plot
-#boxplot2 + geom_dotplot(binaxis='equivalent_annual_salary', stackdir='center', dotsize=1)
-# Box plot with jittered points
-# 0.2 : degree of jitter in x direction
-#p + geom_jitter(shape=16, position=position_jitter(0.2))
 
-```
 
 
 
