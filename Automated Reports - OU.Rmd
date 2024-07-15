@@ -705,12 +705,51 @@ remuneration <- remuneration %>%
 boxplot2 <- ggplot(remuneration, aes(x=reorder(employment_title, equivalent_annual_salary, FUN = median), y=equivalent_annual_salary)) + 
   geom_boxplot(fill = NA, coef = 0)
 
-boxplot2 + coord_flip() + labs(x = "Employment Title", y = "Median Annual Remuneration") + geom_jitter(aes(colour = class), width = 0.3, fill = 'lightblue')
+boxplot2 + coord_flip() + labs(x = "Employment Title", y = "Median Annual Remuneration") + geom_jitter(width = 0.3, fill = 'lightblue')
 
 # NEXT STEPS: Complete the rest of the bar graphs, including stacked bar graphs!!
 
+```
 
+## FY23 Local Partner Staffing Expenditures by Program Area
 
+```{r fig6, fig.height = 5, fig.width = 8, echo = FALSE, eval = TRUE}
+
+# Create local partners summary table
+
+local_partner <- HRH_clean %>%
+  filter(fiscal_year == 2023) %>%
+  filter(funding_agency == "USAID") %>%
+  filter(operating_unit == params$operating_unit) %>%
+  filter(!program == "Error") %>%
+  select(fiscal_year, funding_agency, program, is_indigenous_prime_partner, actual_annual_spend) %>%
+  group_by(program, is_indigenous_prime_partner) %>%
+  summarise(actual_annual_spend = sum(actual_annual_spend, na.rm = T)) %>%
+  arrange(desc(actual_annual_spend)) 
+
+ggplot(local_partner, aes(x = reorder(program, -actual_annual_spend), y = actual_annual_spend, fill = is_indigenous_prime_partner)) +
+  geom_col() +
+  
+  geom_label(
+        aes(
+            y     = actual_annual_spend,
+            label = scales::dollar(round(actual_annual_spend))),
+        size = 3
+    ) +
+  
+  theme(panel.grid = element_blank(), panel.background = element_rect(fill = "white"),
+        axis.line=element_blank(),
+        axis.text.y=element_blank(),
+        axis.ticks=element_blank(),
+        axis.title.x=element_blank(),
+        axis.title.y=element_blank(),
+        plot.title = element_text(size = 10)) +
+  
+  scale_fill_brewer(palette = "Pastel1") 
+
+#NEXT STEP: Just move on to the next graphs, we will deal with formatting and polishing later
+
+```
 
 
 
