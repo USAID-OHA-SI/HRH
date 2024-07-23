@@ -902,7 +902,7 @@ g3
 
 \pagebreak
 
-## Top Employment Titles for Community-Based Staff (by count)
+## Top Employment Titles for Community-Based Staff
 This shows the most common employment title for community-based staff by count
 
 ```{r fig8, fig.height = 5, fig.width = 8, echo = FALSE, eval = TRUE}
