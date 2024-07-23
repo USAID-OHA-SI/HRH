@@ -8,14 +8,17 @@ params:
 ---
 
 ---
-title: "FY23 HRH Inventory Briefer - `r params$operating_unit`"
+title: "FY23 Human Resources for Health (HRH) Inventory Briefer - `r params$operating_unit`"
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = FALSE) # supress code
+
+# set global standards
+knitr::opts_chunk$set(echo = FALSE) # supress code outputs
 knitr::opts_chunk$set(warning = FALSE, message = FALSE) # suppress all warnings
 knitr::opts_chunk$set(dpi=300) # set high resolution of plots
 
+# load all needed libraries
 library(plyr)
 library(dplyr)
 library(tidyverse)
@@ -32,25 +35,33 @@ library(ggrepel)
 
 ```
 
-## Automated reports at OU level
+## Background
 
-This provides a detailed summary of the FY23 HRH Inventory dataset for `r params$operating_unit`. These reports help summarize staffing investments and trends at the country level to inform current programming, and facilitate HRH planning.
+This HRH Inventory Briefer provides a detailed summary of the FY23 HRH Inventory for `r params$operating_unit`. This report will summarize the submitted HRH inventory templates by prime implementation partners to help country teams better monitor and understand their staffing footprint. 
+
+Mission teams should use these briefers to review their ongoing staffing investments/trends at the OU level to inform current programming, and facilitate HRH planning. If there are questions on the summary info provided here, please reach out to iborces@usaid.gov
 
 ```{r}
 
-# Load the FSD and HRH dataset
-fin_data_orig <- read.delim("./1. Data/Financial_Structured_Datasets_COP17-23_20231215.txt") 
-load(file = "./4. Outputs/RDS/FY23_cleanHRH.rds") 
-load(file = "./4. Outputs/RDS/HRH_ER_merged_21_23.rds") 
+# Load the FSD, HRH, and merged FSD-HRH dataset
+fin_data_orig <- read.delim("./1. Data/Financial_Structured_Datasets_COP17-23_20231215.txt") # FSD
+load(file = "./4. Outputs/RDS/FY23_cleanHRH.rds") # HRH
+load(file = "./4. Outputs/RDS/HRH_ER_merged_21_23.rds") # FSD-HRH 
+
+# Some data cleaning for rows to be removed
+HRH_clean <- HRH_clean %>%
+  filter(!program == "Error")
 
 ```
 
-## USAID and CDC HRH Inventory Submission Rate
-This shows the number of mechanisms that submitted both ER and HRH templates to better understand the overall completeness/reliability of the HRH inventory.
+## HRH Inventory Completeness and Data Quality
+This table shows the number of mechanisms (and their associated staffing expenditure) in `r params$operating_unit` that submitted both the ER and HRH inventory templates this year. This allows us to better understand the overall completeness of the HRH inventory in terms of number of mechanisms that submitted, and the total dollar value that was reported to HRH compared to ER. 
+
+Ideally, the total staffing expenditure reported in HRH and ER by USAID, CDC, and other agencies should be as close to 100% as possible. Due to some inherent reporting differences, the reported HRH and ER staffing expenditures will not always match 100%, but should still be very close. If there are any missing mechanisms that did not submit their HRH inventory template, please follow up with partners accordingly to ensure timely and accurate submission in the next reporting cycle.
 
 ```{r, echo = FALSE, eval = TRUE}
 
-
+# Create summary df to be used for table output
 mech_submissions <- finalMerge %>%
   filter(year == 2023) %>%
   filter(GHSC_UN_keywordflags == "FALSE") %>% # excluding all GHSC and UN mechanisms
@@ -73,17 +84,17 @@ mech_submissions <- finalMerge %>%
   mutate(across(4:5, formattable::currency,digits=0)) %>%
   mutate(across(6, formattable::percent, digits=0))
 
-# Now, display the final table with formatted column names
+# Now display the final table with formatted column names
 knitr::kable(mech_submissions, "simple", 
              col.names=c("Funding Agency", "No. of HRH Submissions", "No. of ER Submissions", 
-                         "HRH Expenditure Amount (USD)", "ER Expenditure Amount   (USD)", "Overall Submission Rate (%)"),
+                         "HRH Expenditure Amount (USD)", "ER Expenditure Amount   (USD)", "HRH Expenditure as % of ER Expenditure"),
              caption = "Submission Rate by Agency")
 
 
 ```
 
-## Initial Summary of PEPFAR vs USAID HRH Staffing footprint
-This table provides a summary of USAID's staffing size relative to PEPFAR in `r params$operating_unit`. Relative to PEPFAR, this shows USAID's relative staffing footprint (individual count and FTE), the % going towards staffing, and the amount spent by local prime implementation partners
+## Summary of PEPFAR vs USAID HRH Staffing footprint
+This provides a summary of USAID's staffing size relative to the overall PEPFAR program in `r params$operating_unit`. Relative to PEPFAR, this shows USAID's relative staffing footprint (individual count and full time equivalence), the % of spending going towards staffing, and the amount spent by local prime implementation partners. This can serve as a proxy for USAID's role and level of involvement for implementing PEPFAR within the country based on the agency's staffing footprint relative to other agencies such as CDC. 
 
 ```{r echo = FALSE, eval = TRUE}
 
@@ -99,7 +110,7 @@ infographic_PEPFAR <- HRH_clean %>%
             placeholder_pctHRH = sum(actual_annual_spend, na.rm = T),
             local_partner_expenditures = sum(actual_annual_spend[is_indigenous_prime_partner == "Y"]))
 
-# Calculate the % towards staffing
+# Calculate the % spent towards staffing
 PEPFAR_pct_HRH <- finalMerge %>%
   filter(year == 2023) %>%
   filter(operating_unit == params$operating_unit) %>%
@@ -127,7 +138,7 @@ infographic_USAID <- HRH_clean %>%
             placeholder_pctHRH = sum(actual_annual_spend, na.rm = T),
             local_partner_expenditures = sum(actual_annual_spend[is_indigenous_prime_partner == "Y"]))
 
-# Calculate the % towards staffing for USAID
+# Calculate the % spent towards staffing for USAID
 USAID_pct_HRH <- finalMerge %>%
   filter(year == 2023) %>%
   filter(operating_unit == params$operating_unit) %>%
@@ -147,7 +158,6 @@ infographic_USAID <- infographic_USAID %>%
 # Lastly, bind both data frames together to create the final summary table
 infographic <- rbind(infographic_PEPFAR, infographic_USAID) %>%
 
-
 # format the columns
   mutate(across(2, formattable::currency, digits=0)) %>%
   mutate(across(3:4, formattable::accounting, digits=0)) %>%
@@ -163,14 +173,13 @@ knitr::kable(infographic, "simple",
 
 ```
 
-
-
-## FY23 Staffing Footprint by Funding Agency
-Breakdown of HRH expenditure and number of individual staff supported by each agency
+## Funding Agency
+Breakdown of HRH expenditure and number of individual staff supported by USAID, CDC, and other agencies. This provides better understanding of how many staff (and how much they cost) that USAID and CDC recruited to implement their FY23 program activities.  
 
 ```{r, echo = FALSE, eval = TRUE}
 
-## Create a Transformer Function to be used by the rest of the dual axis plots ----
+## Create a Transformer Function that will be used by our dual axis plots. The transformer function will 'transform' the second axis, such that it will be scaled with the first axis for visualization via dual axis plots ----
+
 transformer_dual_y_axis <- function(data,
                                     primary_column, secondary_column,
                                     include_y_zero = FALSE) {
@@ -216,9 +225,11 @@ transformer_dual_y_axis <- function(data,
 
 ```
 
-```{r fig1, fig.height = 4, fig.width = 7, echo = FALSE, eval = TRUE}
+```{r fig1, fig.height = 5, fig.width = 7, echo = FALSE, eval = TRUE}
 
-# Create a df that shows HRH expenditure and individual count by program area
+# With the transformer function, we can now start making dual axis plots.
+
+# First, create a df that shows HRH expenditure and individual count by program area
 dual_axis <- HRH_clean %>%
   filter(fiscal_year == 2023) %>%
   filter(operating_unit == params$operating_unit) %>%
@@ -236,7 +247,7 @@ transformer <- dual_axis %>%
         include_y_zero   = TRUE
     )
 
-# Now make the plot
+# Now make the dual axis plot
 
 g1 <- dual_axis %>%
     ggplot(aes(x = reorder(funding_agency, -individual_count))) +
@@ -254,14 +265,15 @@ g1 <- dual_axis %>%
         size = 3
     )
 
-# * 3.2 SECONDARY AXIS ----
+# CREATE THE SECONDARY AXIS ----
 
-# Create a y-label distance for use in this graph based on the max value of the y-axis
+# Create a y-label nudge for use in this graph based on the max value of the y-axis
 y_axis_nudge <- dual_axis %>%
   summarise(max_y_value = max(actual_annual_spend)) %>%
-  mutate(nudge = max_y_value * .000017) %>%
+  mutate(nudge = max_y_value * .00002) %>%
   pull(nudge)
 
+# Now add the secondary axis
 g2 <- g1 +
     geom_point(
         aes(y     = transformer$inv_func(actual_annual_spend),
@@ -288,6 +300,7 @@ g2 <- g1 +
   
   labs(title = stringr::str_glue("Individual Count and HRH Expenditure by Funding Agency in {params$operating_unit}")) +
   
+  # Add formatting of the dual axis plots
   theme(panel.grid = element_blank(), panel.background = element_rect(fill = "white"),
         axis.line=element_blank(),
         axis.text.y=element_blank(),
@@ -310,23 +323,25 @@ funding_agency_summary <- g2 +
         axis.title.x=element_blank()
     )
 
+# Output the final visual
 funding_agency_summary
 
 ```
 
+\pagebreak
 
+## Primary Program Areas
+Breakdown of total HRH expenditure and number of individual staff by primary program area for USAID. This shows a general view of which program areas that staff are 'primarily' working on. Note that the HRH inventory collects info on 'primary' program area in that we ask staff to be categorized towards one program area only. While staff may be working on multiple program areas, staff can only be categorized towards one program area. 
 
-## FY23 Staffing Breakdown by Program Area
-Breakdown of total HRH expenditure and number of individual staff by program area
+With this in mind, we typically see higher Program Management (PM) and Above Service Programming (ASP) HRH expenditures while seeing lower HRH expenditures for Prevention (PREV), Socioeconomic (SE), or HIV Testing (HTS). This may indicate that non-service delivery staff may be more expensive (though lower by staff count) compared to service delivery staff working at community level (i.e. high staff count, but less expensive)
 
-```{r fig2, fig.height = 4.5, fig.width = 8, echo = FALSE, eval = TRUE}
+```{r fig2, fig.height = 7, fig.width = 9, echo = FALSE, eval = TRUE}
 
 # Create a df that shows HRH expenditure and individual count by program area
 dual_axis <- HRH_clean %>%
   filter(fiscal_year == 2023) %>%
   filter(funding_agency == "USAID") %>%
   filter(operating_unit == params$operating_unit) %>%
-  filter(!program == "Error") %>%
   select(fiscal_year, funding_agency, program, actual_annual_spend, individual_count) %>%
   group_by(program) %>%
   summarise(actual_annual_spend = sum(actual_annual_spend, na.rm = T),
@@ -341,7 +356,7 @@ dual_axis_pct_PM <- dual_axis %>%
   filter(program == "PM") %>%
   pull(actual_annual_spend)
 
-# Make A Y-Axis Transformer
+# Make the Y-Axis Transformer
 transformer <- dual_axis %>%
     transformer_dual_y_axis(
         primary_column   = individual_count,
@@ -367,12 +382,12 @@ g1 <- dual_axis %>%
         size = 3
     )
 
-# * 3.2 SECONDARY AXIS ----
+# ADD SECONDARY AXIS ----
 
 # Create a y-label distance for use in this graph based on the max value of the y-axis
 y_axis_nudge <- dual_axis %>%
   summarise(max_y_value = max(actual_annual_spend)) %>%
-  mutate(nudge = max_y_value * .000026) %>%
+  mutate(nudge = max_y_value * .000025) %>%
   pull(nudge)
 
 g2 <- g1 +
@@ -430,17 +445,18 @@ g3
 
 ```
 
-## FY23 Top Employment Titles (by count)
-Breakdown of total HRH expenditure and number of individual staff by highest count
+\pagebreak
 
-```{r fig3, fig.height = 5, fig.width = 8, echo = FALSE, eval = TRUE}
+## Top Employment Titles (based on individual count or based on HRH expenditure)
+The following two graphs show the top employment titles based on (i) highest individual count, or (ii) based on highest HRH expenditure for USAID. The first graphs shows the most common employment title being recruited by USAID based on individual count. These two graphs may look different because the most common employment titles with the highest staff count are typically community-based staff that are less expensive, while the more expensive staff are typically non-service delivery staff that provide more program management or above service delivery activities.
+
+```{r fig3, fig.height = 4, fig.width = 7, echo = FALSE, eval = TRUE}
 
 # Create a df that shows HRH expenditure and individual count by the top 10 employment title
 dual_axis <- HRH_clean %>%
   filter(fiscal_year == 2023) %>%
   filter(funding_agency == "USAID") %>%
   filter(operating_unit == params$operating_unit) %>%
-  filter(!program == "Error") %>%
   select(fiscal_year, funding_agency, employment_title, actual_annual_spend, individual_count) %>%
   group_by(employment_title) %>%
   summarise(actual_annual_spend = sum(actual_annual_spend, na.rm = T),
@@ -476,12 +492,12 @@ g1 <- dual_axis %>%
         size = 3
     )
 
-# * 3.2 SECONDARY AXIS ----
+# ADD SECONDARY AXIS ----
 
 # Create a y-label distance for use in this graph based on the max value of the y-axis
 y_axis_nudge <- dual_axis %>%
   summarise(max_y_value = max(actual_annual_spend)) %>%
-  mutate(nudge = max_y_value * .00017) %>%
+  mutate(nudge = max_y_value * .0002) %>%
   pull(nudge)
 
 g2 <- g1 +
@@ -499,8 +515,6 @@ g2 <- g1 +
         nudge_y = y_axis_nudge
     ) + 
   
-  
-#scale_y_continuous(labels = scales::comma)
     scale_y_continuous(
         name     = "Individual Count",
         labels = scales::comma,
@@ -511,7 +525,7 @@ g2 <- g1 +
         )
     ) +
   
-  labs(title = stringr::str_glue("Individual Count and HRH Expenditure by Top Employment Title (for count)")) +
+  labs(title = stringr::str_glue("Top 5 Employment Titles (by individual count)")) +
   
   theme(panel.grid = element_blank(), panel.background = element_rect(fill = "white"),
         axis.line=element_blank(),
@@ -519,15 +533,17 @@ g2 <- g1 +
         axis.ticks=element_blank(),
         axis.title.x=element_blank(),
         axis.title.y=element_blank(),
-        plot.title = element_text(size = 10)) 
+        plot.title = element_text(size = 10)) +
 
-g3 <- g2 +
     theme_tq() +
+  
     scale_color_manual(values = c(
         palette_light()[["red"]],
         palette_light()[["blue"]]
     )) +
+  
     scale_fill_manual(values = palette_light()[["blue"]]) +
+  
     theme(
         legend.position    = "none",
         axis.title.y.right = element_text(color = palette_light()[["red"]]),
@@ -535,27 +551,23 @@ g3 <- g2 +
         axis.title.x=element_blank()
     )
 
-g3
+g2
 
 ```
   
-## FY23 Top Employment Titles (by expenditure)
-Breakdown of total HRH expenditure and number of individual staff by the highest expenditure
-
-```{r fig4, fig.height = 5, fig.width = 8, echo = FALSE, eval = TRUE}
+```{r fig4, fig.height = 4, fig.width = 7, echo = FALSE, eval = TRUE}
 
 # Create a df that shows HRH expenditure and individual count by the top 10 employment title
 dual_axis <- HRH_clean %>%
   filter(fiscal_year == 2023) %>%
   filter(funding_agency == "USAID") %>%
   filter(operating_unit == params$operating_unit) %>%
-  filter(!program == "Error") %>%
   select(fiscal_year, funding_agency, employment_title, actual_annual_spend, individual_count) %>%
   group_by(employment_title) %>%
   summarise(actual_annual_spend = sum(actual_annual_spend, na.rm = T),
             individual_count = sum(individual_count, na.rm = T)) %>%
   arrange(desc(actual_annual_spend)) %>%
-  top_n(n = 5, wt = actual_annual_spend) %>%
+  top_n(n = 5, wt = actual_annual_spend) %>% # filter for the top 5
   ungroup() %>%
   mutate(employment_title_wrapped = str_wrap(employment_title, width = 10)) %>%
   select(-employment_title)
@@ -585,12 +597,12 @@ g1 <- dual_axis %>%
         size = 3
     )
 
-# * 3.2 SECONDARY AXIS ----
+# ADD SECONDARY AXIS ----
 
 # Create a y-label distance for use in this graph based on the max value of the y-axis
 y_axis_nudge <- dual_axis %>%
   summarise(max_y_value = max(actual_annual_spend)) %>%
-  mutate(nudge = max_y_value * .00017) %>%
+  mutate(nudge = max_y_value * .0001) %>%
   pull(nudge)
 
 g2 <- g1 +
@@ -619,7 +631,7 @@ g2 <- g1 +
         )
     ) +
   
-  labs(title = stringr::str_glue("Individual Count and HRH Expenditure by Top Employment Title (for expenditure)")) +
+  labs(title = stringr::str_glue("Top 5 Employment Titles (by HRH expenditure)")) +
   
   theme(panel.grid = element_blank(), panel.background = element_rect(fill = "white"),
         axis.line=element_blank(),
@@ -627,15 +639,17 @@ g2 <- g1 +
         axis.ticks=element_blank(),
         axis.title.x=element_blank(),
         axis.title.y=element_blank(),
-        plot.title = element_text(size = 10)) 
+        plot.title = element_text(size = 10)) +
 
-g3 <- g2 +
     theme_tq() +
+  
     scale_color_manual(values = c(
         palette_light()[["red"]],
         palette_light()[["blue"]]
     )) +
+  
     scale_fill_manual(values = palette_light()[["blue"]]) +
+  
     theme(
         legend.position    = "none",
         axis.title.y.right = element_text(color = palette_light()[["red"]]),
@@ -643,25 +657,25 @@ g3 <- g2 +
         axis.title.x=element_blank()
     )
 
-g3
+g2
 
 ```
 
 ## FY23 Median Annual Remuneration
-This box plot shows the range of annual remuneration (i.e. annual salary) of the top employment titles
+This scatter plot shows the range of annual remuneration (i.e. annual salary) of the top employment titles in USAID. Each dot is an individual's annual remuneration. This graph generally shows the general spread or range of remuneration for each employment title. 
 
+This graph typically shows that the highest paid staff are typically above site, non-service delivery staff while the lowest paid staff are typically more community-based service delivery staff.
 
-```{r fig5, fig.height = 7, fig.width = 9, echo = FALSE, eval = TRUE}
+```{r fig5, fig.height = 11, fig.width = 10, echo = FALSE, eval = TRUE}
 
-# Prepare the remuneration data frame
+# Prepare the remuneration df to be used
 remuneration <- HRH_clean %>%
   filter(fiscal_year == 2023) %>%
   filter(funding_agency == "USAID") %>%
   filter(operating_unit == params$operating_unit) %>%
-  filter(!program == "Error") %>%
   select(employment_title, equivalent_annual_salary)
 
-# Remove any outliers for now
+# Remove any extreme outliers, since we do not want to visualize them in our box plot
 detect_outlier <- function(x) {
   # calculate first quantile
   Quantile1 <- quantile(x, probs=.01)
@@ -685,34 +699,38 @@ remove_outlier <- function(dataframe,
   return(dataframe)
 }
 
+# Now use the function to remove extreme outliers from our remuneration df
 remuneration <- remove_outlier(remuneration, 'equivalent_annual_salary')
 
-# Calculate the median annual remuneration by employment title, then filter for top 10 titles, pull the titles and use this as the sort variable
+# Calculate the median annual remuneration by employment title, filter for top 10 titles, pull the titles, and use this as a sorting variable
 sort_list <- remuneration %>%
   group_by(employment_title) %>%
   summarise(median_remuneration = median(equivalent_annual_salary, na.rm = T),
             n = n()) %>%
   arrange(desc(median_remuneration)) %>%
   filter(n > 10) %>%
-  top_n(n = 10, wt = median_remuneration) %>%
+  top_n(n = 20, wt = median_remuneration) %>%
   mutate(employment_title_wrapped = str_wrap(employment_title, width = 10)) %>%
   pull(employment_title)
   
+# Filter our remuneration df for the top titles in our sorting list
 remuneration <- remuneration %>%
   filter(employment_title %in% sort_list)
 
-# Create the box plot
+# Now create the box plot
 ggplot(remuneration, 
        aes(x=reorder(employment_title, equivalent_annual_salary, FUN = median), 
            y=equivalent_annual_salary)) + 
   
-  geom_boxplot(fill = NA, coef = 0) +
-
+#  geom_boxplot(fill = NA, coef = 0) +
+  
+  geom_jitter(width = 0.4) +
+  
+  scale_y_continuous(labels = label_dollar()) +
+  
   coord_flip() + 
   
   labs(x = "Employment Title", y = "Median Annual Remuneration") + 
-  
-  geom_jitter(width = 0.4) +
   
   scale_fill_manual(values = rep(NA, 2)) +
   
@@ -720,42 +738,31 @@ ggplot(remuneration,
   
   theme(panel.background = element_rect(fill = "white"),
         axis.line=element_blank(),
-        axis.ticks=element_blank(),
+   #     axis.ticks=element_blank(),
         axis.title.y=element_blank(),
         plot.title = element_text(size = 10))
 
-#ggplot(remuneration, 
-#       aes(x=reorder(employment_title, equivalent_annual_salary, FUN = median), 
-#           y=equivalent_annual_salary, 
-#           group = employment_title)) + 
-#  geom_boxplot() + 
-#  labs(x="Employment Title", y = "Estimated Annual Remuneration / Salary") +
-#  coord_flip()
-
-### NEXT STEPS: FIX THE BOX PLOT. NEED TO REFINE THE OUTLIER REMOVER FUNCTION. ONLY REMOVE THE TOP 1-2 OUTLIER POINTS THAT ARE SUPER HIGH. 
-
-# AFTER THAT, FIX THE DOT FORMATTING
-
-
 ```
 
-## FY23 Local Partner Staffing Expenditures by Program Area
+## Local Partners
+This shows how much of USAID's HRH expenditure are channeled through prime local partners for each primary program area. Note that Local Partners here are defined as local organizations that were awarded as the prime partner, and not as sub-awardees/subrecipients. If a local organization is a subrecipient and the prime partner is an international organization, then their staffing expenditures are considered as non-local
 
-```{r fig6, fig.height = 5, fig.width = 8, echo = FALSE, eval = TRUE}
+This should provide country teams a better idea of the level of local partner involvement in implementing PEPFAR program activities, especially as prime partners
 
-# Create local partners summary table
+```{r fig6, fig.height = 5, fig.width = 6, echo = FALSE, eval = TRUE}
 
+# Create the summary df for local partners
 local_partner <- HRH_clean %>%
   filter(fiscal_year == 2023) %>%
   filter(funding_agency == "USAID") %>%
   filter(operating_unit == params$operating_unit) %>%
-  filter(!program == "Error") %>%
   select(fiscal_year, funding_agency, program, is_indigenous_prime_partner, actual_annual_spend) %>%
   group_by(program, is_indigenous_prime_partner) %>%
   summarise(actual_annual_spend = sum(actual_annual_spend, na.rm = T)) %>%
   arrange(desc(actual_annual_spend)) 
 
-ggplot(local_partner, aes(x = reorder(program, -actual_annual_spend), 
+# Now plot the summary df
+  ggplot(local_partner, aes(x = reorder(program, -actual_annual_spend), 
                           y = actual_annual_spend, 
                           fill = is_indigenous_prime_partner,
                           label = actual_annual_spend)) +
@@ -765,10 +772,15 @@ ggplot(local_partner, aes(x = reorder(program, -actual_annual_spend),
   geom_text(aes(label = scales::dollar(round(actual_annual_spend))), size = 3, position = position_stack(vjust = 0.5)) +
   
   xlab("Program Area") +
+    
+  ylab("Total HRH Expenditure") +
+    
+  scale_y_continuous(labels = label_dollar()) +
   
-  scale_fill_manual(values = c("#808080", "#1e87a5")) +
+  scale_fill_manual(values = c("#808080", "#1e87a5")) + # format the color
+    
+  scale_fill_discrete(name = "Prime Local Partner?") +
 
-  
   theme(panel.background = element_rect(fill = "white"),
         axis.line=element_blank(),
         axis.text.y=element_blank(),
@@ -779,12 +791,16 @@ ggplot(local_partner, aes(x = reorder(program, -actual_annual_spend),
   
   theme_tq() 
 
-
 ```
 
-## FY23 Staffing Expenditures and Count by Work Location
+\pagebreak
 
-```{r fig7, fig.height = 5, fig.width = 7, echo = FALSE, eval = TRUE}
+## Work Location
+This shows the work location of USAID staff in terms of HRH expenditure and staff count. Most staff are typically located at the community level and facility level. There are typically less staff working above site (i.e. non-service delivery staff), but typically associated with higher HRH expenditure. 
+
+Above site staff are defined as personnel that are not directly interacting or providing services to beneficiaries (e.g. TA personnel or support staff based mostly in offices). Roving staff are direct service delivery staff that are providing services in multiple facilities.
+
+```{r fig7, fig.height = 7, fig.width = 9, echo = FALSE, eval = TRUE}
 
 # Create a df that shows HRH expenditure and individual count by work location
 dual_axis <- HRH_clean %>%
@@ -806,7 +822,6 @@ transformer <- dual_axis %>%
     )
 
 # Now make the plot
-
 g1 <- dual_axis %>%
     ggplot(aes(x = reorder(work_location, -individual_count))) +
     geom_col(
@@ -814,21 +829,22 @@ g1 <- dual_axis %>%
         alpha = 0.9,
         width = 0.7
     ) +
+  
     geom_label(
         aes(
             y     = individual_count,
             label = scales::comma(round(individual_count)),
             color = "Individual Count",
         ),
-        size = 3
+        size = 4
     )
 
-# * 3.2 SECONDARY AXIS ----
+# ADD SECONDARY AXIS ----
 
 # Create a y-label distance for use in this graph based on the max value of the y-axis
 y_axis_nudge <- dual_axis %>%
   summarise(max_y_value = max(actual_annual_spend)) %>%
-  mutate(nudge = max_y_value * .000017) %>%
+  mutate(nudge = max_y_value * .000025) %>%
   pull(nudge)
 
 g2 <- g1 +
@@ -837,6 +853,7 @@ g2 <- g1 +
             color = "HRH Expenditure"),
         size = 4
     ) +
+  
     geom_label(
         aes(
             y     = transformer$inv_func(actual_annual_spend),
@@ -865,7 +882,7 @@ g2 <- g1 +
         axis.title.y=element_blank(),
         plot.title = element_text(size = 10)) 
 
-work_location_summary <- g2 +
+g3 <- g2 +
     theme_tq() +
     scale_color_manual(values = c(
         palette_light()[["red"]],
@@ -879,11 +896,14 @@ work_location_summary <- g2 +
         axis.title.x=element_blank()
     )
 
-work_location_summary
+g3
 
 ```
 
+\pagebreak
+
 ## Top Employment Titles for Community-Based Staff (by count)
+This shows the most common employment title for community-based staff by count
 
 ```{r fig8, fig.height = 5, fig.width = 8, echo = FALSE, eval = TRUE}
 
@@ -893,18 +913,16 @@ dual_axis <- HRH_clean %>%
   filter(funding_agency == "USAID") %>%
   filter(operating_unit == params$operating_unit) %>%
   filter(is_community_primarily == "Yes") %>%
-  filter(!program == "Error") %>%
   select(fiscal_year, work_location, employment_title, actual_annual_spend, individual_count) %>%
   group_by(employment_title) %>%
   summarise(actual_annual_spend = sum(actual_annual_spend, na.rm = T),
             individual_count = sum(individual_count, na.rm = T)) %>%
   top_n(n = 5, wt = individual_count) %>%
-  arrange(individual_count) %>%
   ungroup() %>%
   mutate(employment_title_wrapped = str_wrap(employment_title, width = 10)) %>%
   select(-employment_title)
 
-# Make the first plot
+# Make the column graph
 g1 <- dual_axis %>%
     ggplot(aes(x = reorder(employment_title_wrapped, individual_count))) +
     geom_col(
@@ -921,7 +939,7 @@ g1 <- dual_axis %>%
         size = 3
     ) +
   
-  labs(title = stringr::str_glue("Top Employment Titles for Community-based Staff (by count)")) +
+  ylab("Individual Count") + 
   
   theme(panel.grid = element_blank(), panel.background = element_rect(fill = "white"),
         axis.line=element_blank(),
@@ -941,7 +959,9 @@ g1 <- dual_axis %>%
     theme(
         legend.position    = "none",
         axis.title.y=element_blank()
-    ) + 
+    ) +
+
+    scale_y_continuous(labels = scales::comma_format()) +
   
     coord_flip()
 
@@ -949,7 +969,8 @@ g1
 
 ```
 
-## FY23 Top Primary Beneficiaries
+## FY23 Top Primary Beneficiaries for Community-Based Staff
+This shows the top primary beneficiaries supported by community-based staff by count
 
 ```{r fig9, fig.height = 5, fig.width = 9, echo = FALSE, eval = TRUE}
 
@@ -958,9 +979,10 @@ dual_axis <- HRH_clean %>%
   filter(fiscal_year == 2023) %>%
   filter(funding_agency == "USAID") %>%
   filter(operating_unit == params$operating_unit) %>%
-  filter(!program == "Error") %>%
+  filter(work_location == "Community") %>%
   select(fiscal_year, beneficiary, actual_annual_spend, individual_count) %>%
-  group_by(beneficiary) %>%
+  mutate(beneficiary_wrapped = str_wrap(beneficiary, width = 10)) %>%
+  group_by(beneficiary_wrapped) %>%
   summarise(actual_annual_spend = sum(actual_annual_spend, na.rm = T),
             individual_count = sum(individual_count, na.rm = T)) %>%
   arrange(desc(individual_count)) 
@@ -976,7 +998,7 @@ transformer <- dual_axis %>%
 # Make the first plot
 
 g1 <- dual_axis %>%
-    ggplot(aes(x = reorder(beneficiary, -individual_count))) +
+    ggplot(aes(x = reorder(beneficiary_wrapped, -individual_count))) +
     geom_col(
         aes(y = individual_count, fill = "Individual Count"),
         alpha = 0.9,
@@ -991,12 +1013,12 @@ g1 <- dual_axis %>%
         size = 3
     )
 
-# * 3.2 SECONDARY AXIS ----
+# ADD SECONDARY AXIS ----
 
 # Create a y-label distance for use in this graph based on the max value of the y-axis
 y_axis_nudge <- dual_axis %>%
   summarise(max_y_value = max(actual_annual_spend)) %>%
-  mutate(nudge = max_y_value * .000026) %>%
+  mutate(nudge = max_y_value * .00002) %>%
   pull(nudge)
 
 g2 <- g1 +
@@ -1014,8 +1036,7 @@ g2 <- g1 +
         nudge_y = y_axis_nudge
     ) + 
   
-  
-#scale_y_continuous(labels = scales::comma)
+
     scale_y_continuous(
         name     = "Individual Count",
         labels = scales::comma,
@@ -1025,8 +1046,6 @@ g2 <- g1 +
             labels = scales::dollar
         )
     ) +
-  
-  labs(title = stringr::str_glue("Individual Count and HRH Expenditure by Primary Beneficiary")) +
   
   theme(panel.grid = element_blank(), panel.background = element_rect(fill = "white"),
         axis.line=element_blank(),
@@ -1054,27 +1073,29 @@ g3
 
 ```
 
-## FY23 Top Prime Implementatino Partners by count
+## Top Prime Implementation Partners 
+This shows the top 5 prime partners with the highest staffing footprint in terms of individual count. Each prime partner is disaggregated by primary program area, which should indicate the primary program activities that each partner is focused on. 
 
-```{r fig10, fig.height = 5, fig.width = 8, echo = FALSE, eval = TRUE}
+If requested, we can provide a deeper dive review of each top implementation partner to better understand their staffing composition.
+
+```{r fig10, fig.height = 8, fig.width = 9, echo = FALSE, eval = TRUE}
 
 # Pull names of top 5 partners only
 top_5_partners <- HRH_clean %>%
   filter(fiscal_year == 2023) %>%
   filter(funding_agency == "USAID") %>%
   filter(operating_unit == params$operating_unit) %>%
-  filter(!program == "Error") %>%
   group_by(prime_partner_name) %>%
   summarise(individual_count = sum(individual_count, na.rm = T)) %>%
   arrange(desc(individual_count)) %>%
   top_n(n = 5, wt = individual_count) %>%
   pull(prime_partner_name)
 
+# Create a summary table that filters for the top 5 partner names only
 prime_partners <- HRH_clean %>%
   filter(fiscal_year == 2023) %>%
   filter(funding_agency == "USAID") %>%
   filter(operating_unit == params$operating_unit) %>%
-  filter(!program == "Error") %>%
   filter(prime_partner_name %in% top_5_partners) %>%
   select(fiscal_year, er_category, prime_partner_name, individual_count) %>%
   group_by(prime_partner_name, er_category) %>%
@@ -1082,6 +1103,7 @@ prime_partners <- HRH_clean %>%
   arrange(desc(individual_count)) %>%
   mutate(prime_partner_name_wrapped = str_wrap(prime_partner_name, width = 10))
   
+# Now make the plot
   ggplot(prime_partners, aes(x = reorder(prime_partner_name_wrapped, -individual_count), 
                              y = individual_count, 
                              fill = er_category,
@@ -1090,10 +1112,14 @@ prime_partners <- HRH_clean %>%
   geom_bar(stat = "identity") +
   
   geom_text(aes(label = scales::comma(round(individual_count))), 
-            size = 3, 
+            size = 4, 
             position = position_stack(vjust = 0.5)) +
     
+  scale_y_continuous(labels = scales::comma_format()) +
+    
   xlab("Prime partner name") +
+    
+  ylab("Individual Count") + 
   
   scale_fill_manual(values = c("#287c6f", "#2057a7", "#808080", "#C43d4d")) +
   
