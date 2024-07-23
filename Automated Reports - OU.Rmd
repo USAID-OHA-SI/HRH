@@ -1018,7 +1018,7 @@ g1 <- dual_axis %>%
 # Create a y-label distance for use in this graph based on the max value of the y-axis
 y_axis_nudge <- dual_axis %>%
   summarise(max_y_value = max(actual_annual_spend)) %>%
-  mutate(nudge = max_y_value * .00002) %>%
+  mutate(nudge = max_y_value * .00015) %>%
   pull(nudge)
 
 g2 <- g1 +
