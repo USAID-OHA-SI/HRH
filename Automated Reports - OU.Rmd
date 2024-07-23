@@ -447,7 +447,7 @@ g3
 
 \pagebreak
 
-## Top Employment Titles (based on individual count or based on HRH expenditure)
+## Top Employment Titles
 The following two graphs show the top employment titles based on (i) highest individual count, or (ii) based on highest HRH expenditure for USAID. The first graphs shows the most common employment title being recruited by USAID based on individual count. These two graphs may look different because the most common employment titles with the highest staff count are typically community-based staff that are less expensive, while the more expensive staff are typically non-service delivery staff that provide more program management or above service delivery activities.
 
 ```{r fig3, fig.height = 4, fig.width = 7, echo = FALSE, eval = TRUE}

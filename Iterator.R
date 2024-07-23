@@ -11,7 +11,7 @@ operating_unit <- c("Tanzania", "Lesotho", "Eswatini", "Botswana", "Ethiopia", "
 
 # create a table for each operating unit
 reports <- tibble(
-  output_file = stringr::str_c("4. Outputs/Automated Reports/", operating_unit, "- FY23 HRH Summary.doc"),
+  output_file = stringr::str_c("4. Outputs/Automated Reports/", operating_unit, " - FY23 HRH Summary.doc"),
   params = map(operating_unit, ~list(operating_unit = .))
 )
 
