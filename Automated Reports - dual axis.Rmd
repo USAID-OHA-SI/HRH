@@ -5,10 +5,11 @@ date: "`r format(Sys.time(), '%d %B, %Y')`"
 params: 
     set_title: "My Title!"
     operating_unit: !r c("Tanzania")
+    fiscal_year: "FY24"
 ---
 
 ---
-title: "FY23 Human Resources for Health (HRH) Inventory Briefer - `r params$operating_unit`"
+title: "`r params$fiscal_year` Human Resources for Health (HRH) Inventory Summary - `r params$operating_unit`"
 ---
 
 ```{r setup, include=FALSE}
@@ -32,12 +33,14 @@ library(tidyquant)
 library(formattable)
 library(kableExtra)
 library(ggrepel)
+library(ggplot2)
+library(patchwork)
 
 ```
 
 ## Background
 
-This HRH Inventory Briefer provides a detailed summary of the FY23 HRH Inventory for `r params$operating_unit`. This report will summarize the submitted HRH inventory templates by prime implementation partners to help country teams better monitor and understand their staffing footprint. 
+This HRH Inventory Briefer provides a detailed summary of the `r params$fiscal_year` HRH Inventory for `r params$operating_unit`. This report will summarize the submitted HRH inventory templates by prime implementation partners to help country teams better monitor and understand their staffing footprint. 
 
 Mission teams should use these briefers to review their ongoing staffing investments/trends at the OU level to inform current programming, and facilitate HRH planning. If there are questions on the summary info provided here, please reach out to iborces@usaid.gov
 
@@ -54,7 +57,7 @@ HRH_clean <- HRH_clean %>%
 
 ```
 
-## HRH Inventory Completeness and Data Quality
+## `r params$fiscal_year` HRH Inventory Completeness and Data Quality
 This table shows the number of mechanisms (and their associated staffing expenditure) in `r params$operating_unit` that submitted both the ER and HRH inventory templates this year. This allows us to better understand the overall completeness of the HRH inventory in terms of number of mechanisms that submitted, and the total dollar value that was reported to HRH compared to ER. 
 
 Ideally, the total staffing expenditure reported in HRH and ER by USAID, CDC, and other agencies should be as close to 100% as possible. Due to some inherent reporting differences, the reported HRH and ER staffing expenditures will not always match 100%, but should still be very close. If there are any missing mechanisms that did not submit their HRH inventory template, please follow up with partners accordingly to ensure timely and accurate submission in the next reporting cycle.
@@ -93,7 +96,7 @@ knitr::kable(mech_submissions, "simple",
 
 ```
 
-## Summary of PEPFAR vs USAID HRH Staffing footprint
+## `r params$fiscal_year` PEPFAR vs USAID HRH Staffing footprint
 This provides a summary of USAID's staffing size relative to the overall PEPFAR program in `r params$operating_unit`. Relative to PEPFAR, this shows USAID's relative staffing footprint (individual count and full time equivalence), the % of spending going towards staffing, and the amount spent by local prime implementation partners. This can serve as a proxy for USAID's role and level of involvement for implementing PEPFAR within the country based on the agency's staffing footprint relative to other agencies such as CDC. 
 
 ```{r echo = FALSE, eval = TRUE}
@@ -169,12 +172,12 @@ knitr::kable(infographic, "simple",
              col.names=c("Funding Agency", "HRH Staffing Expenditure", "Individual Count", 
                          "Total FTE (Full-Time Equivalence)", "% of Total Expenditures Spent Towards HRH", 
                          "Local Partner HRH Staffing Expenditure"),
-             caption = "FY23 HRH Summary: By The Numbers")
+             caption = "HRH Summary: By The Numbers")
 
 ```
 
 ## Funding Agency
-Breakdown of HRH expenditure and number of individual staff supported by USAID, CDC, and other agencies. This provides better understanding of how many staff (and how much they cost) that USAID and CDC recruited to implement their FY23 program activities.  
+Breakdown of HRH expenditure and number of individual staff supported by USAID, CDC, and other agencies. This provides better understanding of how many staff (and how much they cost) that USAID and CDC recruited to implement their `r params$fiscal_year` program activities.  
 
 ```{r, echo = FALSE, eval = TRUE}
 
@@ -661,7 +664,7 @@ g2
 
 ```
 
-## FY23 Median Annual Remuneration
+## Median Annual Remuneration
 This scatter plot shows the range of annual remuneration (i.e. annual salary) of the top employment titles in USAID. Each dot is an individual's annual remuneration. This graph generally shows the general spread or range of remuneration for each employment title. 
 
 This graph typically shows that the highest paid staff are typically above site, non-service delivery staff while the lowest paid staff are typically more community-based service delivery staff.
@@ -969,7 +972,7 @@ g1
 
 ```
 
-## FY23 Top Primary Beneficiaries for Community-Based Staff
+## Top Primary Beneficiaries for Community-Based Staff
 This shows the top primary beneficiaries supported by community-based staff by count
 
 ```{r fig9, fig.height = 5, fig.width = 9, echo = FALSE, eval = TRUE}
