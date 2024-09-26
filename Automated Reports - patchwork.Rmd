@@ -1,6 +1,7 @@
 ---
 output: word_document
 author: "GH/OHA/SPS/HWF"
+geometry: margin = 0.10in
 date: "`r format(Sys.time(), '%d %B, %Y')`"
 params: 
     set_title: "My Title!"
@@ -180,7 +181,7 @@ knitr::kable(infographic, "simple",
 Breakdown of HRH expenditure and number of individual staff supported by USAID, CDC, and other agencies. This provides better understanding of how many staff (and how much they cost) that USAID and CDC recruited to implement their `r params$fiscal_year` program activities.  
 
 
-```{r fig1, fig.height = 5, fig.width = 7, echo = FALSE, eval = TRUE}
+```{r fig1, fig.height = 6, fig.width = 10, echo = FALSE, eval = TRUE}
 
 # First, create a df that shows HRH expenditure and individual count by program area
 patchwork <- HRH_clean %>%
@@ -203,19 +204,20 @@ g1 <- ggplot(data = patchwork, mapping = aes(x = reorder(funding_agency, -actual
     geom_label(
         aes(y     = individual_count,
             label = scales::comma(round(individual_count))),
-        size = 3
+        size = 5
     ) +
   
     theme_tq() +
   
-    labs(title = stringr::str_glue("Individual Count by Funding Agency in {params$operating_unit}")) +
+    labs(title = stringr::str_glue("Individual Count by Funding Agency")) +
     theme(axis.line=element_blank(),
         axis.text.y=element_blank(),
         axis.ticks=element_blank(),
         axis.title.x=element_blank(),
         axis.title.y=element_blank(),
         legend.position    = "none",
-        plot.title = element_text(size = 10)) 
+        plot.title = element_text(size = 15),
+        text = element_text(size = 15)) 
   
 # Make the second plot 
 
@@ -229,19 +231,20 @@ g2 <- ggplot(data = patchwork, mapping = aes(x = reorder(funding_agency, -actual
       geom_label(
         aes(y     = actual_annual_spend,
             label = scales::dollar(round(actual_annual_spend))),
-        size = 3
+        size = 5
     ) +
   
     theme_tq() +
   
-    labs(title = stringr::str_glue("HRH Expenditure by Funding Agency in {params$operating_unit}")) +
+    labs(title = stringr::str_glue("HRH Expenditure by Funding Agency")) +
     theme(axis.line=element_blank(),
         axis.text.y=element_blank(),
         axis.ticks=element_blank(),
         axis.title.x=element_blank(),
         axis.title.y=element_blank(),
         legend.position    = "none",
-        plot.title = element_text(size = 10)) 
+        plot.title = element_text(size = 15),
+        text = element_text(size = 15)) 
    
 g3 <- g2 + g1
 
@@ -257,7 +260,7 @@ Breakdown of total HRH expenditure and number of individual staff by primary pro
 
 With this in mind, we typically see higher Program Management (PM) and Above Service Programming (ASP) HRH expenditures while seeing lower HRH expenditures for Prevention (PREV), Socioeconomic (SE), or HIV Testing (HTS). This may indicate that non-service delivery staff may be more expensive (though lower by staff count) compared to service delivery staff working at community level (i.e. high staff count, but less expensive)
 
-```{r fig2, fig.height = 7, fig.width = 9, echo = FALSE, eval = TRUE}
+```{r fig2, fig.height = 8, fig.width = 10, echo = FALSE, eval = TRUE}
 
 # Create a df that shows HRH expenditure and individual count by program area
 patchwork <- HRH_clean %>%
@@ -291,11 +294,12 @@ g1 <- ggplot(data = patchwork, mapping = aes(x = reorder(program, -actual_annual
                               "HTS" = "#8980cb",
                               "PREV" = "#808080")) +
   
-    geom_label(
-        aes(y     = individual_count,
-            label = scales::comma(round(individual_count))),
-        size = 3
-    ) +
+    geom_label_repel(data = patchwork, aes(label = scales::comma(round(individual_count))),
+             size = 5,
+             position = "identity",
+             min.segment.length = 0.25,
+             direction = "y",
+             show.legend = FALSE) +
   
     theme_tq() +
   
@@ -306,7 +310,8 @@ g1 <- ggplot(data = patchwork, mapping = aes(x = reorder(program, -actual_annual
         axis.title.x=element_blank(),
         axis.title.y=element_blank(),
         legend.position    = "none",
-        plot.title = element_text(size = 10)) 
+        plot.title = element_text(size = 15),
+        text = element_text(size = 15)) 
 
 # Make the second plot
 
@@ -321,11 +326,12 @@ g2 <- ggplot(data = patchwork, mapping = aes(x = reorder(program, -actual_annual
                               "HTS" = "#8980cb",
                               "PREV" = "#808080")) +
   
-      geom_label(
-        aes(y     = actual_annual_spend,
-            label = scales::dollar(round(actual_annual_spend))),
-        size = 3
-    ) +
+    geom_label_repel(data = patchwork, aes(label = scales::dollar(round(actual_annual_spend))),
+             size = 5,
+             position = "identity",
+             min.segment.length = 0.25,
+             direction = "y",
+             show.legend = FALSE) +
   
     theme_tq() +
   
@@ -336,7 +342,8 @@ g2 <- ggplot(data = patchwork, mapping = aes(x = reorder(program, -actual_annual
         axis.title.x=element_blank(),
         axis.title.y=element_blank(),
         legend.position    = "none",
-        plot.title = element_text(size = 10)) 
+        plot.title = element_text(size = 15),
+        text = element_text(size = 15)) 
    
 g3 <- g2 + g1
 
@@ -378,25 +385,25 @@ g1 <- ggplot(data = patchwork, mapping = aes(x = reorder(employment_title_wrappe
                               "#8980cb",
                               "#808080")) +
   
-    geom_label(
-        aes(y     = individual_count,
-            label = scales::comma(round(individual_count))),
-        size = 3
-    ) +
+    geom_label_repel(data = patchwork, aes(label = scales::comma(round(individual_count))),
+             size = 3,
+             position = "identity",
+             min.segment.length = 0.25,
+             direction = "y",
+             show.legend = FALSE) +
   
     theme_tq() +
   
-    labs(title = stringr::str_glue("Individual Count by Top Employment Titles (based on Individual Count)")) +
+    labs(title = stringr::str_glue("Individual Count by Top Employment Titles")) +
     theme(axis.line=element_blank(),
         axis.text.y=element_blank(),
         axis.ticks=element_blank(),
         axis.title.x=element_blank(),
         axis.title.y=element_blank(),
         legend.position    = "none",
-        plot.title = element_text(size = 9)) 
+        plot.title = element_text(size = 10)) 
 
 # Make the second plot
-
 
 g2 <- ggplot(data = patchwork, mapping = aes(x = reorder(employment_title_wrapped, -actual_annual_spend), y = actual_annual_spend, fill = employment_title_wrapped)) +
     geom_col(alpha = 0.9,
@@ -409,22 +416,23 @@ g2 <- ggplot(data = patchwork, mapping = aes(x = reorder(employment_title_wrappe
                               "#8980cb",
                               "#808080")) +
   
-      geom_label(
-        aes(y     = actual_annual_spend,
-            label = scales::dollar(round(actual_annual_spend))),
-        size = 3
-    ) +
+    geom_label_repel(data = patchwork, aes(label = scales::dollar(round(actual_annual_spend))),
+             size = 3,
+             position = "identity",
+             min.segment.length = 0.25,
+             direction = "y",
+             show.legend = FALSE) +
   
     theme_tq() +
   
-    labs(title = stringr::str_glue("HRH Expenditure by Top Employment Titles (based on Individual Count)")) +
+    labs(title = stringr::str_glue("HRH Expenditure by Top Employment Titles")) +
     theme(axis.line=element_blank(),
         axis.text.y=element_blank(),
         axis.ticks=element_blank(),
         axis.title.x=element_blank(),
         axis.title.y=element_blank(),
         legend.position    = "none",
-        plot.title = element_text(size = 9)) 
+        plot.title = element_text(size = 10)) 
    
 g3 <- g2 + g1
 
@@ -464,22 +472,23 @@ g1 <- ggplot(data = patchwork, mapping = aes(x = reorder(employment_title_wrappe
                               "#8980cb",
                               "#808080")) +
   
-    geom_label(
-        aes(y     = individual_count,
-            label = scales::comma(round(individual_count))),
-        size = 3
-    ) +
+    geom_label_repel(data = patchwork, aes(label = scales::comma(round(individual_count))),
+             size = 3,
+             position = "identity",
+             min.segment.length = 0.25,
+             direction = "y",
+             show.legend = FALSE) +
   
     theme_tq() +
   
-    labs(title = stringr::str_glue("Individual Count by Top Employment Titles (based on HRH Expenditure)")) +
+    labs(title = stringr::str_glue("Individual Count by Top Employment Titles")) +
     theme(axis.line=element_blank(),
         axis.text.y=element_blank(),
         axis.ticks=element_blank(),
         axis.title.x=element_blank(),
         axis.title.y=element_blank(),
         legend.position    = "none",
-        plot.title = element_text(size = 9)) 
+        plot.title = element_text(size = 10)) 
 
 # Make the second plot
 
@@ -494,22 +503,23 @@ g2 <- ggplot(data = patchwork, mapping = aes(x = reorder(employment_title_wrappe
                               "#8980cb",
                               "#808080")) +
   
-      geom_label(
-        aes(y     = actual_annual_spend,
-            label = scales::dollar(round(actual_annual_spend))),
-        size = 3
-    ) +
+        geom_label_repel(data = patchwork, aes(label = scales::dollar(round(actual_annual_spend))),
+             size = 3,
+             position = "identity",
+             min.segment.length = 0.25,
+             direction = "y",
+             show.legend = FALSE) +
   
     theme_tq() +
   
-    labs(title = stringr::str_glue("HRH Expenditure by Top Employment Titles (based on HRH Expenditure)")) +
+    labs(title = stringr::str_glue("HRH Expenditure by Top Employment Titles")) +
     theme(axis.line=element_blank(),
         axis.text.y=element_blank(),
         axis.ticks=element_blank(),
         axis.title.x=element_blank(),
         axis.title.y=element_blank(),
         legend.position    = "none",
-        plot.title = element_text(size = 9)) 
+        plot.title = element_text(size = 10)) 
    
 g3 <- g2 + g1
 
@@ -596,7 +606,8 @@ ggplot(remuneration,
         axis.line=element_blank(),
         axis.ticks=element_blank(),
         axis.title.y=element_blank(),
-        plot.title = element_text(size = 10),
+        plot.title = element_text(size = 13),
+        text = element_text(size = 16),
         legend.position    = "none")
 
 ```
@@ -624,17 +635,12 @@ local_partner <- HRH_clean %>%
                           fill = is_indigenous_prime_partner,
                           label = actual_annual_spend)) +
   
-  geom_bar(stat = "identity") +
+  geom_bar(stat = "identity", width = 0.8) +
     
   geom_label_repel(data = local_partner, aes(label = scales::dollar(round(actual_annual_spend))),
              size = 2.5,
-             label.size = NA,
              position = position_stack(vjust = 0.5),
-             box.padding = 0,
-             label.padding = 0,
-             force = 0.001,
-             direction = "x",
-             max.overlaps = 10,
+             direction = "y",
              show.legend = FALSE) +
   
   xlab("Program Area") +
@@ -667,7 +673,7 @@ This shows the work location of USAID staff in terms of HRH expenditure and staf
 
 Above site staff are defined as personnel that are not directly interacting or providing services to beneficiaries (e.g. TA personnel or support staff based mostly in offices). Roving staff are direct service delivery staff that are providing services in multiple facilities.
 
-```{r fig7, fig.height = 7, fig.width = 9, echo = FALSE, eval = TRUE}
+```{r fig7, fig.height = 5, fig.width = 10, echo = FALSE, eval = TRUE}
 
 # Create a df that shows HRH expenditure and individual count by work location
 patchwork <- HRH_clean %>%
@@ -690,11 +696,13 @@ g1 <- ggplot(data = patchwork, mapping = aes(x = reorder(work_location, -actual_
                               "Community" = "#1e87a5",
                               "Roving" = "#8980cb")) +
   
-    geom_label(
-        aes(y     = individual_count,
-            label = scales::comma(round(individual_count))),
-        size = 3
-    ) +
+    geom_label_repel(data = patchwork, aes(label = scales::comma(round(individual_count))),
+             size = 3,
+             position = "identity",
+             min.segment.length = 0.25,
+             direction = "y",
+             show.legend = FALSE) +
+  
   
     theme_tq() +
   
@@ -718,11 +726,12 @@ g2 <- ggplot(data = patchwork, mapping = aes(x = reorder(work_location, -actual_
                               "Community" = "#1e87a5",
                               "Roving" = "#8980cb")) +
   
-      geom_label(
-        aes(y     = actual_annual_spend,
-            label = scales::dollar(round(actual_annual_spend))),
-        size = 3
-    ) +
+    geom_label_repel(data = patchwork, aes(label = scales::dollar(round(actual_annual_spend))),
+             size = 3,
+             position = "identity",
+             min.segment.length = 0.25,
+             direction = "y",
+             show.legend = FALSE) +
   
     theme_tq() +
   
@@ -813,7 +822,7 @@ g1
 ## Top Primary Beneficiaries for Community-Based Staff
 This shows the top primary beneficiaries supported by community-based staff by count
 
-```{r fig9, fig.height = 5, fig.width = 9, echo = FALSE, eval = TRUE}
+```{r fig9, fig.height = , fig.width = 9, echo = FALSE, eval = TRUE}
 
 # Create a df that shows HRH expenditure and individual count by primary beneficiary
 patchwork <- HRH_clean %>%
@@ -827,15 +836,6 @@ patchwork <- HRH_clean %>%
   summarise(actual_annual_spend = sum(actual_annual_spend, na.rm = T),
             individual_count = sum(individual_count, na.rm = T)) %>%
   arrange(desc(individual_count)) 
-
-
-
-
-
-
-
-
-
 
 # Make the first plot
 g1 <- ggplot(data = patchwork, mapping = aes(x = reorder(beneficiary_wrapped, -actual_annual_spend), y = individual_count, fill = beneficiary_wrapped)) +
@@ -851,11 +851,12 @@ g1 <- ggplot(data = patchwork, mapping = aes(x = reorder(beneficiary_wrapped, -a
                               "Non-Targeted Pop" = "#287c6f",
                               "Not Specified" = "#808080")) +
   
-    geom_label(
-        aes(y     = individual_count,
-            label = scales::comma(round(individual_count))),
-        size = 3
-    ) +
+    geom_label_repel(data = patchwork, aes(label = scales::comma(round(individual_count))),
+             size = 3,
+             position = "identity",
+             min.segment.length = 0.25,
+             direction = "y",
+             show.legend = FALSE) +
   
     theme_tq() +
   
@@ -883,11 +884,12 @@ g2 <- ggplot(data = patchwork, mapping = aes(x = reorder(beneficiary_wrapped, -a
                               "Non-Targeted Pop" = "#287c6f",
                               "Not Specified" = "#808080")) +
   
-      geom_label(
-        aes(y     = actual_annual_spend,
-            label = scales::dollar(round(actual_annual_spend))),
-        size = 3
-    ) +
+    geom_label_repel(data = patchwork, aes(label = scales::dollar(round(actual_annual_spend))),
+             size = 3,
+             position = "identity",
+             min.segment.length = 0.25,
+             direction = "y",
+             show.legend = FALSE) +
   
     theme_tq() +
   
@@ -942,17 +944,13 @@ prime_partners <- HRH_clean %>%
                              fill = er_category,
                              label = individual_count)) +
   
-  geom_bar(stat = "identity") +
+  geom_bar(stat = "identity", width = 0.7) +
     
   geom_label_repel(data = prime_partners, aes(label = scales::comma(round(individual_count))),
              size = 4,
-             label.size = NA,
              position = position_stack(vjust = 0.5),
-             box.padding = 0,
-             label.padding = 0,
-             force = 0.001,
+             min.segment.length = 0.25,
              direction = "x",
-             max.overlaps = 10,
              show.legend = FALSE) +
  
   scale_y_continuous(labels = scales::comma_format()) +
