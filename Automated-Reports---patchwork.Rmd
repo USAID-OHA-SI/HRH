@@ -46,9 +46,9 @@ library(patchwork)
 
 ## Background
 
-This HRH Inventory Briefer provides a detailed summary of the `r params$fiscal_year` HRH Inventory for `r params$operating_unit`. This report will summarize the submitted HRH inventory templates by prime implementation partners to help country teams better monitor and understand their staffing footprint. 
+This HRH Inventory Briefer provides a detailed summary of the FY24 HRH Inventory for Tanzania. This report will summarize the HRH inventory templates submitted by prime implementation partners to help Mission teams better monitor and understand their PEPFAR-supported staffing footprint.
 
-Mission teams should use these briefers to review their ongoing staffing investments/trends at the OU level to inform current programming, and facilitate HRH planning. If there are questions on the summary info provided here, please reach out to iborces@usaid.gov
+Missions should use these briefers to review their staffing investments and trends at the OU level to inform programming and facilitate HRH planning. If there are questions on the summary info provided here, please reach out to Kyle Borces (Data Analyst, iborces@usaid.gov) and Risa Griffin (Data Scientist, rgriffin@usaid.gov)
 
 ```{r}
 
@@ -64,9 +64,9 @@ HRH_clean <- HRH_clean %>%
 ```
 
 ## `r params$fiscal_year` HRH Inventory Completeness and Data Quality
-This table shows the number of mechanisms (and their associated staffing expenditure) in `r params$operating_unit` that submitted both the ER and HRH inventory templates this year. This allows us to better understand the overall completeness of the HRH inventory in terms of number of mechanisms that submitted, and the total dollar value that was reported to HRH compared to ER. 
+This table shows the number of mechanisms (and their associated staffing expenditure) in `r params$operating_unit` that submitted both the ER and HRH inventory templates for `r params$fiscal_year`. This allows us to better understand the overall completeness of the HRH inventory in terms of the number of mechanisms that were submitted, and the total dollar value that was reported to HRH compared to ER. 
 
-Ideally, the total staffing expenditure reported in HRH and ER by USAID, CDC, and other agencies should be as close to 100% as possible. Due to some inherent reporting differences, the reported HRH and ER staffing expenditures will not always match 100%, but should still be very close. If there are any missing mechanisms that did not submit their HRH inventory template, please follow up with partners accordingly to ensure timely and accurate submission in the next reporting cycle.
+The total staffing expenditure reported in HRH and ER by USAID, CDC, and other agencies should closely match each other as much as possible. The reported HRH and ER staffing expenditures will not always exactly match each other, but are still expected to be aligned. If there are mechanisms that submitted staffing expenses in their Expenditure Report, but did not submit their HRH inventory template, please follow up with partners accordingly to ensure timely submissions in the next reporting cycle.
 
 ```{r, echo = FALSE, eval = TRUE}
 
@@ -94,18 +94,19 @@ mech_submissions <- finalMerge %>%
   mutate(across(6, formattable::percent, digits=0))
 
 # Now display the final table with formatted column names
-#knitr::kable(mech_submissions, "simple", 
-#             col.names=c("Funding Agency", "No. of HRH Submissions", "No. of ER Submissions", 
-#                         "HRH Expenditure Amount (USD)", "ER Expenditure Amount   (USD)", "HRH Expenditure as % of ER Expenditure"),
-#             caption = "Submission Rate by Agency")
+knitr::kable(mech_submissions, "simple", 
+             col.names=c("Funding Agency", "No. of HRH Submissions", "No. of ER Submissions", 
+                         "HRH Expenditure Amount (USD)", "ER Expenditure Amount   (USD)", "HRH Expenditure as % of ER Expenditure"),
+             caption = "Submission Rate by Agency")
 
-mech_submissions <- gt(mech_submissions)                                                    
+#mech_submissions <- gt(mech_submissions)
 
 
 ```
 
 ## `r params$fiscal_year` PEPFAR vs USAID HRH Staffing footprint
-This provides a summary of USAID's staffing size relative to the overall PEPFAR program in `r params$operating_unit`. Relative to PEPFAR, this shows USAID's relative staffing footprint (individual count and full time equivalence), the % of spending going towards staffing, and the amount spent by local prime implementation partners. This can serve as a proxy for USAID's role and level of involvement for implementing PEPFAR within the country based on the agency's staffing footprint relative to other agencies such as CDC. 
+
+This provides a summary of USAID’s staffing size relative to the overall PEPFAR program in `r params$operating_unit`. This shows USAID’s staffing footprint relative to the full PEPFAR staffing footprint (individual count and full time equivalence), the % of spending going towards staffing, and the amount spent by local prime implementation partners. This serves as an indicator for USAID’s level of staffing investment in the country relative to other implementing agencies.
 
 ```{r echo = FALSE, eval = TRUE}
 
@@ -185,8 +186,8 @@ knitr::kable(infographic, "simple",
 ```
 
 ## Funding Agency
-Breakdown of HRH expenditure and number of individual staff supported by USAID, CDC, and other agencies. This provides better understanding of how many staff (and how much they cost) that USAID and CDC recruited to implement their `r params$fiscal_year` program activities.  
 
+Breakdown of HRH expenditure and number of individual staff supported by USAID, CDC, and other agencies. This provides a summary of the total staffing expenditure and total headcount that are being supported by each agency to implement their `r params$fiscal_year` program activities.
 
 ```{r fig1, fig.height = 6, fig.width = 10, echo = FALSE, eval = TRUE}
 
@@ -263,9 +264,9 @@ g3
 \pagebreak
 
 ## Primary Program Areas
-Breakdown of total HRH expenditure and number of individual staff by primary program area for USAID. This shows a general view of which program areas that staff are 'primarily' working on. Note that the HRH inventory collects info on 'primary' program area in that we ask staff to be categorized towards one program area only. While staff may be working on multiple program areas, staff can only be categorized towards one program area. 
+Breakdown of total HRH expenditure and number of individual staff by primary program area for USAID. This shows a general view of which program areas that staff are ‘primarily’ working on. Note that the HRH inventory collects data on ‘primary’ program areas where staff can only be categorized towards one program area that accounts for most of their worker time. While staff may be working on multiple program areas, staff can only be categorized towards one program area in the HRH inventory.
 
-With this in mind, we typically see higher Program Management (PM) and Above Service Programming (ASP) HRH expenditures while seeing lower HRH expenditures for Prevention (PREV), Socioeconomic (SE), or HIV Testing (HTS). This may indicate that non-service delivery staff may be more expensive (though lower by staff count) compared to service delivery staff working at community level (i.e. high staff count, but less expensive)
+With this in mind, we typically see higher Program Management (PM) and Above Service Programming (ASP) staffing expenditures while seeing lower staffing expenditures for Prevention (PREV), Socioeconomic (SE), or HIV Testing (HTS). This may indicate that non-service delivery staff may be higher cost (though lower by staff count) compared to service delivery staff working at community level (with higher staff count, but lower cost)
 
 ```{r fig2, fig.height = 8, fig.width = 10, echo = FALSE, eval = TRUE}
 
@@ -361,7 +362,7 @@ g3
 \pagebreak
 
 ## Top Employment Titles Based on Individual Count
-This shows the top 5 employment titles being recruited by USAID based on individual count. The most common employment titles with the highest staff count are typically community-based staff providing direct service delivery. 
+This shows the top 5 employment titles supported by PEPFAR USAID based on individual count. The most common employment titles with the highest staff count are typically community-based staff providing direct service delivery.
 
 ```{r fig3, fig.height = 4, fig.width = 7, echo = FALSE, eval = TRUE}
 
@@ -450,7 +451,7 @@ g3
 ```
 
 ## Top Employment Titles Based on HRH Expenditure
-This shows the top 5 employment titles being recruited by USAID based on HRH expenditure. The most common employment titles with the highest HRH expenditure are typically above site, non-service delivery staff
+This shows the top 5 employment titles supported by PEPFAR USAID based on HRH expenditure. The most common employment titles with the highest HRH expenditure are typically above site, non-service delivery staff
 
 ```{r fig4, fig.height = 4, fig.width = 7, echo = FALSE, eval = TRUE}
 
@@ -539,9 +540,7 @@ g3
 ```
 
 ## Median Annual Remuneration
-This scatter plot shows the median annual remuneration (i.e. estimated annual salary) of the top 20 employment titles among USAID IP's. Each dot is an individual's estimated annual remuneration. This graph generally shows the general spread or range of remuneration for each employment title. 
-
-This graph typically shows that the highest paid staff are typically above site, non-service delivery staff while the lowest paid staff are typically more community-based service delivery staff.
+This scatter plot shows the median annual remuneration (i.e. estimated annual salary) of the top 20 employment titles among USAID IP’s. This graph shows the range of remuneration for each employment title where each dot represents an individual’s estimated annual remuneration. 
 
 ```{r fig5, fig.height = 11, fig.width = 10, echo = FALSE, eval = TRUE}
 
@@ -624,9 +623,7 @@ ggplot(remuneration,
 ```
 
 ## Local Partners
-This shows how much of USAID's HRH expenditure are channeled through prime local partners for each primary program area. Note that Local Partners here are defined as local organizations that were awarded as the prime partner, and not as sub-awardees/subrecipients. If a local organization is a subrecipient and the prime partner is an international organization, then their staffing expenditures are considered as non-local
-
-This should provide country teams a better idea of the level of local partner involvement in implementing PEPFAR program activities, especially as prime partners
+This shows how much of USAID’s HRH expenditure is channeled through prime local partners for each primary program area. Note that Local Partners here are defined as local organizations that were awarded as the prime partner, and not as sub-awardees/subrecipients. If a local organization is a subrecipient while the prime partner is an international organization for a given mechanism, then the subrecipient's staffing expenditures will be considered as non-local. This should provide a picture of the level of local partner involvement in implementing PEPFAR USAID program activities prime partners.
 
 ```{r fig6, fig.height = 5, fig.width = 6, echo = FALSE, eval = TRUE}
 
@@ -680,9 +677,11 @@ local_partner <- HRH_clean %>%
 \pagebreak
 
 ## Work Location
-This shows the work location of USAID staff in terms of HRH expenditure and staff count. Most staff are typically located at the community level and facility level. There are typically less staff working above site (i.e. non-service delivery staff), but typically associated with higher HRH expenditure. 
+
+This shows the work location of USAID staff in terms of HRH expenditure and individual count. Most staff are typically located at the community level and facility/roving level. There are typically fewer staff working at the above site level (i.e. non-service delivery staff), but tend to incur higher staffing expenditure.
 
 Above site staff are defined as personnel that are not directly interacting or providing services to beneficiaries (e.g. TA personnel or support staff based mostly in offices). Roving staff are direct service delivery staff that are providing services in multiple facilities.
+
 
 ```{r fig7, fig.height = 6, fig.width = 8, echo = FALSE, eval = TRUE}
 
@@ -924,9 +923,9 @@ g3
 ```
 
 ## Top Prime Implementation Partners 
-This shows the top 5 prime partners with the highest staffing footprint in terms of individual count. Each prime partner is disaggregated by primary program area, which should indicate the primary program activities that each partner is focused on. 
 
-If requested, we can provide a deeper dive review of each top implementation partner to better understand their staffing composition.
+This shows the top 5 prime partners with the highest staffing footprint in terms of individual count. Each prime partner is disaggregated by primary program area to indicate the program activities that each partner is primarily engaged in. If requested, we can also provide a deeper dive review of each top implementation partner to better describe their staffing composition.
+
 
 ```{r fig10, fig.height = 6, fig.width = 8, echo = FALSE, eval = TRUE}
 

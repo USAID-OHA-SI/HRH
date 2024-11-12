@@ -84,6 +84,12 @@ HRH_dummy24 <- HRH_dummy24 %>%
 HRH_dummy24 <- HRH_dummy24 %>%
   select(-factor_salary, -factor_fringe, -factor_nonMonetary)
 
+# Add dummy variable for dreams
+HRH_dummy24 <- HRH_dummy24 %>%
+  mutate(primarily_DREAMS = if_else(beneficiary == "Females", "Yes", "No")) %>%
+  mutate(employment_title_test = if_else(employment_title == "Other Program Management Staff" & fiscal_year == 2024, 
+                                    sample(c("Program Manager/Officer", "District Coordinator", "Program Assistant/Analyst"), size = 1, replace = FALSE), employment_title))
+
 ## 4. Export to Excel
 write.csv(HRH_dummy24,"./4. Outputs/HRH_Structured_Datasets_Site_IM_FY21-24_not_redacted_2024DUMMY.csv") 
 
