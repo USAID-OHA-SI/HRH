@@ -46,20 +46,3 @@ OVC_mechs <- cleanMER %>%
 #Export the file
 write_xlsx(OVC_mechs,"./4. Outputs/FY23_OVC_mechs.xlsx") 
 
-
-### -----------Create df that shows all mech codes for each country for later use in QC reports -----------------
-
-# Load HRH data
-load(file = "./4. Outputs/RDS/FY23_cleanHRH.rds")
-
-country_mechCodes <- HRH_clean %>%
-  filter(fiscal_year == 2023,
-         funding_agency == "USAID") %>%
-  group_by(fiscal_year, funding_agency, operating_unit, country, mech_code) %>%
-  summarise(actual_annual_spend = sum(actual_annual_spend, na.rm = T)) %>%
-  ungroup() %>%
-  select(-actual_annual_spend)
-
-save(country_mechCodes, file = "./4. Outputs/RDS/mechCodes_Country_ID.rds")
-
-

@@ -18,26 +18,13 @@ library(tibble)
 # Turn off warnings
 options(dplyr.summarise.inform = FALSE)
 
-
-#### FIX THE MULTIPLE MATCHES WITH THE COUNTRY MECH CODES!!!
-#### ALSO, FIX THE HRH-ER MERGED DATASET SO THAT IT INCLUDES THE 'COUNTRY' VARIABLE. THIS ALLOWS US TO CREATE DQC REPORTS BY COUNTRY INSTEAD OF OU!!
-
-
-
-
-
-
 ## ------------------ Import the needed files for HRH, ER, and HRH-ER datasets --------
 fin_data_orig <- read.delim("./1. Data/Financial_Structured_Datasets_COP17-23_20231215.txt") # read in FSD dataset
 load(file = "./4. Outputs/RDS/FY23_cleanHRH.rds") # cleaned HRH dataset
 load(file = "./4. Outputs/RDS/HRH_ER_merged_21_23.rds") # HRH-ER merged dataset
 OVC_mechs <- read_excel("./4. Outputs/FY23_OVC_mechs.xlsx")
 FY23_budget <- read_excel("./1. Data/Comprehensive_Budget_Datasets_COP17-23_20231114.xlsx")
-load(file = "./4. Outputs/RDS/mechCodes_Country_ID.rds")  # import list of mech codes by country for later use for regional summaries
 
-# Clean up mech code / country ID's. PLEASE UPDATE FOR FY24 IN MISC 
-country_mechCodes <- country_mechCodes %>%
-  select(operating_unit, country, mech_code)
 
 # Clean up the OVC mechs 
 OVC_mechs <- OVC_mechs %>%
@@ -239,15 +226,11 @@ for (i in 1:length(OU_list)) {
   
   OU <- OU_list[i] # loop through each OU in the OU list
   
-  # Filter the mech_codes list for each OU
-  country_mechCodes_filtered <- country_mechCodes %>%
-    filter(operating_unit == OU)
-  
       # Top level summary by Prime/Sub
       topLevel <- HRH_ER_merged %>%
         filter(year == max(year)) %>%
         filter(operating_unit == OU) %>%
-        group_by(year, operating_unit, mech_code, mech_name, prime_or_sub) %>%
+        group_by(year, operating_unit, country, mech_code, mech_name, prime_or_sub) %>%
         summarise(ER_expenditure_amt = sum(ER_expenditure_amt[HRH_relevant == "Y"], na.rm = T),
                   HRH_expenditure_amt = sum(HRH_expenditure_amt, na.rm = T)) %>%
         ungroup() %>%
@@ -255,18 +238,13 @@ for (i in 1:length(OU_list)) {
                action_item = if_else(abs(pct_difference_fromER) > 15, "Reported HRH expenditures are significantly different from ER staffing expenditures by at least 15%. Please review for closer alignment.", ""))
       topLevel$pct_difference_fromER[is.nan(topLevel$pct_difference_fromER)] <- NA # convert NaN's to NA 
       topLevel$pct_difference_fromER <- ifelse(is.infinite(topLevel$pct_difference_fromER), 100, topLevel$pct_difference_fromER) # set infinite values to 100
-        
-      # left join the country names for each mech code
-      topLevel <- left_join(topLevel, country_mechCodes_filtered, by = c("mech_code")) %>% 
-        select(year, operating_unit, mech_code:(ncol(topLevel)+1)) %>%
-        arrange(operating_unit, mech_code)
       
 
       # Review count of ER and HRH submissions 
       totalCount <- HRH_ER_merged %>%
         filter(year == max(year)) %>%
         filter(operating_unit == OU) %>%
-        group_by(operating_unit, year, mech_code, mech_name) %>%
+        group_by(operating_unit, country, year, mech_code, mech_name) %>%
         summarise(reported_in_ER = sum(ER_expenditure_amt, na.rm = T),
                   reported_in_HRH = sum(HRH_expenditure_amt, na.rm = T)) %>%
         ungroup() %>%
@@ -274,10 +252,6 @@ for (i in 1:length(OU_list)) {
                reported_in_HRH = if_else(reported_in_HRH > 0, "Yes", "No"),
                action_item = if_else(reported_in_ER == "Yes" & reported_in_HRH == "No", "ER staffing expenditures were reported, but HRH expenditures were NOT reported. Please review and confirm HRH report submission.","")) %>%
         arrange(mech_code)
-      
-      totalCount <- left_join(totalCount, country_mechCodes_filtered, by = c("mech_code")) %>%
-        select(operating_unit, country, year:(ncol(totalCount) + 1)) %>%
-        arrange(country, mech_code)
       
       # Breakdown of employment titles for "Other Staff" 
       Breakdown_other <- HRH_data_orig %>%
@@ -307,10 +281,6 @@ for (i in 1:length(OU_list)) {
       Breakdown_other <- left_join(Breakdown_other, otherPull, by = c("fiscal_year", "operating_unit", "country", "mech_code", "mech_name")) %>%
         mutate(action_item = if_else(pct_ofTotal > 20, "Over 20% of employment titles were reported under the `other` categories. Please review the employment titles identified in column I and determine if a more specific employment title can better reflect their roles/responsibilities", ""))
       
-      Breakdown_other <- left_join(Breakdown_other, country_mechCodes_filtered, by = c("country", "mech_code")) %>%
-        select(fiscal_year, operating_unit, country, mech_code:(ncol(Breakdown_other))) %>%
-        arrange(country, mech_code)
-      
     # OVC Check: Filter the HRH dataset for all OVC mechs that had OVC_serv > 1, then summarize total staff with beneficiary = OVC
       OVC_check <- HRH_data_orig %>%
         filter(fiscal_year == max(fiscal_year),
@@ -319,11 +289,6 @@ for (i in 1:length(OU_list)) {
         group_by(fiscal_year, operating_unit, country, mech_code, mech_name) %>%
         summarise(total_OVC_staff = length(individual_count[beneficiary == "OVC"])) %>%
         mutate(action_item = if_else(total_OVC_staff == 0, "No OVC staff was reported for this mechanism, but our records indicate this mechanism has OVC_SERV targets. Please review and ensure that the beneficiary column for OVC staff is accurate", ""))
-      
-      OVC_check <- left_join(OVC_check, country_mechCodes_filtered, by = c("country", "mech_code")) %>%
-        select(fiscal_year, operating_unit, country, mech_code:(ncol(OVC_check))) %>%
-        arrange(country, mech_code)
-      
       
    # DREAMS Check: Filter the HRH dataset for DREAM(S) related mech names, and then summarize total staff with DREAMS keyword search in Comments column
       DREAMS_check <- HRH_data_orig %>%
@@ -335,9 +300,6 @@ for (i in 1:length(OU_list)) {
         summarise(total_DREAMS_staff = length(individual_count[DREAMS_keyword == "TRUE"])) %>%
         mutate(action_item = if_else(total_DREAMS_staff == 0, "No DREAMS staff was reported for this mechanism, but records indicate this mechanism received some budget for DREAMS. Please review and ensure that all staff working on DREAMS are counted by typing 'DREAMS' in the Comments column", ""))
       
-      DREAMS_check <- left_join(DREAMS_check, country_mechCodes_filtered, by = c("country", "mech_code")) %>%
-        select(fiscal_year, operating_unit, country, mech_code:(ncol(DREAMS_check))) %>%
-        arrange(country, mech_code)
       
       ## Create a summary of ALL data flags for each mechanism
       
@@ -387,7 +349,7 @@ for (i in 1:length(OU_list)) {
       overall_wide <- HRH_ER_merged %>%
         filter(year == max(year),
                operating_unit == OU) %>%
-        distinct(year, operating_unit, mech_code, mech_name, prime_partner_name) %>%
+        distinct(year, operating_unit, country, mech_code, mech_name, prime_partner_name) %>%
         mutate(`Report was submitted for ER, but NOT for HRH` = if_else(mech_code %in% overall_missingHRH, "Yes", "No"),
                `HRH staffing expenditure (prime + sub) is different by > 15% of staffing expenditure reported to ER` = if_else(mech_code %in% overall_primeSub, "Yes", "No"),
                `PRIME staffing expenditure is different by > 15% of PRIME staffing expenditure reported to ER` = if_else(mech_code %in% overall_prime, "Yes", "No"),
@@ -402,7 +364,7 @@ for (i in 1:length(OU_list)) {
       
       # Also build the overall summary table in long format
       overall_long <- overall_wide %>%
-        gather(key = dataQuality_flag, value = Yes_or_No, 6:ncol(overall_wide)) %>%
+        gather(key = dataQuality_flag, value = Yes_or_No, 7:ncol(overall_wide)) %>%
         arrange(mech_code) %>%
         mutate(action_items = case_when(dataQuality_flag == "Report was submitted for ER, but NOT for HRH" & Yes_or_No == "Yes" ~ "ER staffing expenditures were reported, but HRH expenditures were NOT reported. Please ensure HRH report is completed, uploaded, and submitted in DATIM",
                                         dataQuality_flag == "HRH staffing expenditure (prime + sub) is different by > 15% of staffing expenditure reported to ER" & Yes_or_No == "Yes" ~ "Total HRH expenditures were different from total ER staffing expenditures by at least 15%. Please review for closer alignment",
@@ -415,7 +377,7 @@ for (i in 1:length(OU_list)) {
                                         dataQuality_flag == "No staff reported with OVC beneficiaries, even though this mechanism has OVC program targets" & Yes_or_No == "Yes" ~ "No OVC staff was reported for this mechanism, but our records indicate this mechanism has OVC_SERV targets. Please review and ensure that the beneficiary column for OVC staff is accurate",
                                         dataQuality_flag == "No staff reported under DREAMS, even though this mechanism has a DREAMS-related budget" & Yes_or_No == "Yes" ~ "No DREAMS staff was reported for this mechanism, but records indicate this mechanism received some budget for DREAMS. Please review and ensure that all staff working on DREAMS are counted by typing 'DREAMS' in the Comments column",
                                         TRUE ~ "")) %>%
-        select(year, operating_unit, mech_code, mech_name, prime_partner_name, dataQuality_flag, Yes_or_No, action_items)
+        select(year, operating_unit, country, mech_code, mech_name, prime_partner_name, dataQuality_flag, Yes_or_No, action_items)
       
       # Add a note on what we consider under "other" employment title if flagged
       overall_long <- overall_long %>%
@@ -431,11 +393,6 @@ for (i in 1:length(OU_list)) {
         filter(mech_code %in% toKeep) %>%
         filter(Yes_or_No == "Yes") %>%
         select(-Yes_or_No)
-      
-      overall_long <- left_join(overall_long, country_mechCodes_filtered, by = c("mech_code")) %>%
-        select(year, operating_unit, mech_code:(ncol(overall_long) + 1)) %>%
-        arrange(country, mech_code)
-      
       
  ### EDIT: filter for only rows with action items in the data frames to be used
       topLevel <- topLevel %>% filter(mech_code %in% topLevel2) %>%

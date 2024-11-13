@@ -19,16 +19,11 @@ library(tibble)
 options(dplyr.summarise.inform = FALSE)
 
 ## ------------------ Import the needed files for HRH, ER, and HRH-ER datasets --------
-fin_data_orig <- read.delim("./1. Data/Financial_Structured_Datasets_COP17-23_20231114.txt") # read in FSD dataset
+fin_data_orig <- read.delim("./1. Data/Financial_Structured_Datasets_COP17-23_20231215.txt") # read in FSD dataset
 load(file = "./4. Outputs/RDS/FY23_cleanHRH.rds") # cleaned HRH dataset
 load(file = "./4. Outputs/RDS/HRH_ER_merged_21_23.rds") # HRH-ER merged dataset
 OVC_mechs <- read_excel("./4. Outputs/FY23_OVC_mechs.xlsx")
 FY23_budget <- read_excel("./1. Data/Comprehensive_Budget_Datasets_COP17-23_20231114.xlsx")
-load(file = "./4. Outputs/RDS/mechCodes_Country_ID.rds")  # import list of mech codes by country for later use for regional summaries
-
-# Clean up mech code / country ID's
-country_mechCodes <- country_mechCodes %>%
-  select(country, mech_code)
 
 # Clean up the OVC mechs 
 OVC_mechs <- OVC_mechs %>%
@@ -348,23 +343,10 @@ for (i in 1:length(OU_list)) {
         filter(fiscal_year == max(fiscal_year),
                operating_unit == OU,
                mech_code %in% DREAMS_mechs) %>%
-        mutate(DREAMS_keyword = if_else(grepl("DREAM", comments) == TRUE, "TRUE", "FALSE")) %>%
-        group_by(fiscal_year, operating_unit, mech_code, mech_name, prime_partner_name) %>%
+        mutate(DREAMS_keyword = if_else(grepl("DREAM", comments) == TRUE, "TRUE", "FALSE")) %>% #### PLEASE UPDATE TO USE THE NEW DREAMS COLUMN. PLEASE RE-DO ENTIRE DREAMS SCRIPT AND EMULATE THE OVC SCRIPT. WE WANT AN ENTIRE WORKBOOK FOR ALL DREAMS MECHS WITH ALL CHECKS VISIBLE
+        group_by(fiscal_year, operating_unit, country, mech_code, mech_name, prime_partner_name) %>%
         summarise(total_DREAMS_staff = length(individual_count[DREAMS_keyword == "TRUE"])) %>%
         mutate(action_item = if_else(total_DREAMS_staff == 0, "No DREAMS staff was reported for this mechanism, but records indicate this mechanism received some budget for DREAMS. Please review and ensure that all staff working on DREAMS are counted by typing 'DREAMS' in the Comments column", ""))
-      
-      DREAMS_check <- left_join(DREAMS_check, country_mechCodes, by = "mech_code") %>%
-        select(fiscal_year, operating_unit, country, mech_code:(ncol(DREAMS_check) + 1)) %>%
-        arrange(country, mech_code)
-      
-    # Create a check for Other: DREAMS
-      Other_DREAMS <- HRH_data_orig %>%
-        filter(operating_unit == OU,
-               employment_title == "DREAMS") %>%
-        mutate(other_dreams = if_else(grepl("DREAMS", employment_title) == TRUE, "TRUE", "FALSE")) %>%
-        group_by(fiscal_year, operating_unit, country, mech_code, mech_name, prime_partner_name) %>%
-        summarise(other_dreams = length(individual_count[other_dreams == "TRUE"])) %>%
-        mutate(action_item = if_else(other_dreams > 0, "Some staff were categorized under Other: DREAMS employment title, please use a different employment title and then type 'DREAMS' in the Comments column instead", ""))
       
       ## Create a summary of ALL data flags for each mechanism
       
@@ -511,7 +493,6 @@ for (i in 1:length(OU_list)) {
 
 ## Now bind the rows together in each list
 DREAMS_check = do.call(rbind, dreamsList)
-Other_DREAMS = do.call(rbind, otherDreamsList)
 
       
       ## --------------- Load each data frame into the Excel templates---------------
@@ -525,10 +506,9 @@ Other_DREAMS = do.call(rbind, otherDreamsList)
       # Load the data frames into each Excel sheet as needed
       writeData(wb, sheet = 1, wbTitle, startCol = 2, startRow = 3, colNames = FALSE)
       writeData(wb, sheet = 2, DREAMS_check, startCol = 2, startRow = 4, colNames = FALSE)
-      writeData(wb, sheet = 3, Other_DREAMS, startCol = 2, startRow = 4, colNames = FALSE)
 
       # Establish the workbook name based on the OU
-      wbName <- paste0("./4. Outputs/QC Reports/Deep Dive/DREAMS only/FY23 HRH Data Quality Checks - All Countries - DREAMS only.xlsx")
+      wbName <- paste0("./4. Outputs/QC Reports/DREAMS only/FY23 HRH Data Quality Checks - All Countries - DREAMS only.xlsx")
       
       # Export each QC report in Excel
       saveWorkbook(wb, wbName, overwrite = TRUE) #to automate later

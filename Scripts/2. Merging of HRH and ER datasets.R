@@ -22,6 +22,8 @@ load(file = "./4. Outputs/RDS/FY23_cleanHRH.rds") # cleaned HRH dataset
 
 ###---------- Identifying any GHSC or multilateral mechanisms to be removed form HRH and ER dataset --------------------------
 
+### REMEMBER THAT WE ARE KEEPING GHSC MECHS THIS YEAR!!!
+
 # pull ER mech codes to be removed by keyword flag
 removedERmechs <- fin_data_orig %>%
   mutate(keyword_flags = if_else(grepl("^GHSC", mech_name) == TRUE | 
@@ -60,6 +62,7 @@ fin_data2123 <- fin_data2123 %>%
 simple_findata <- fin_data2123 %>%                                       
   group_by(implementation_year,
            operatingunit, 
+           country,
            program,
            fundingagency, 
            prime_partner_name, 
@@ -101,6 +104,7 @@ simple_findata <- simple_findata %>%
 simple_findata <- simple_findata %>%
         rename(ER_year = implementation_year,
                ER_operatingunit = operatingunit,
+               ER_country = country,
                ER_program = program,
                ER_mech_code = mech_code,
                ER_mech_name = mech_name,
@@ -172,6 +176,7 @@ HRH_data2123 <- HRH_data2123 %>%
 simple_hrhdata <- HRH_data2123 %>%
   group_by(fiscal_year,
            operating_unit, 
+           country,
            program,
            funding_agency,
            prime_partner_name,
@@ -201,6 +206,7 @@ simple_hrhdata <- simple_hrhdata %>%
 ## 16. Merge the two datasets using a full join using our key list of grouped variables
   HRH_ER_merged <- full_join(simple_findata, simple_hrhdata, by = c("ER_year" = "fiscal_year",
                                                                     "ER_operatingunit" = "operating_unit",
+                                                                    "ER_country" = "country",
                                                                     "ER_program" = "program",
                                                                     "ER_fundingagency" = "HRH_funding_agency",
                                                                     "ER_prime_partner_name" = "prime_partner_name",
@@ -216,6 +222,7 @@ simple_hrhdata <- simple_hrhdata %>%
   HRH_ER_merged <- HRH_ER_merged %>%
     rename(year = ER_year,
            operating_unit = ER_operatingunit,
+           country = ER_country,
            program = ER_program,
            funding_agency = ER_fundingagency,
            prime_partner_name = ER_prime_partner_name,
@@ -255,6 +262,7 @@ finalMerge <- left_join(HRH_ER_merged, missing_mechs, by = c("year", "mech_code"
 finalMerge <- finalMerge %>%
   select(year,
          operating_unit, 
+         country,
          program,
          funding_agency, 
          prime_partner_name, 
