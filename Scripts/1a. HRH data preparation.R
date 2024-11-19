@@ -10,16 +10,17 @@ library(sqldf)
 library(janitor)
 
 ## Import the 2021, 2022, and HRH dataset as .txt file
+HRH_data_orig_24 <- read.delim("./1. Data/test_HRH_Structured_Datasets_Site_IM_FY24_not_redacted_20241021.txt", header = TRUE, stringsAsFactors = FALSE)
 HRH_data_orig_23 <- read.delim("./1. Data/HRH_Structured_Datasets_Site_IM_FY23_not_redacted_20231215.txt", header = TRUE, stringsAsFactors = FALSE)
 HRH_data_orig_22 <- read.delim("./1. Data/HRH_Structured_Datasets_Site_IM_FY22_not_redacted_20231215.txt", header = TRUE, stringsAsFactors = FALSE)
 HRH_data_orig_21 <- read.delim("./1. Data/HRH_Structured_Datasets_Site_IM_FY21_not_redacted_20231215.txt", header = TRUE, stringsAsFactors = FALSE)
 
-## EDIT: import also the CDC CoAg list
-CoAg <- read_excel("./1. Data/COP21-22 CDC G2G and parastatals.xlsx")
-CoAg_USAID <- read_excel("./1. Data/COP21-22 USAID G2G and parastatals.xlsx")
+# Do some data cleaning of prior years before we append them in one df
+HRH_data_orig_21 <- HRH_data_orig_21 %>%
+  rename(local_prime_partner = is_indigenous_prime_partner)
 
 ## Row bind all three years
-HRH_clean <- rbind(HRH_data_orig_23, HRH_data_orig_22, HRH_data_orig_21)
+HRH_clean <- rbind.fill(HRH_data_orig_24, HRH_data_orig_23, HRH_data_orig_22, HRH_data_orig_21)
 
 # If the operating unit is regional, psnuuid = snu1uid
 HRH_clean <- HRH_clean %>%
