@@ -48,7 +48,7 @@ library(patchwork)
 
 This HRH Inventory Briefer provides a detailed summary of the FY24 HRH Inventory for Tanzania. This report will summarize the HRH inventory templates submitted by prime implementation partners to help Mission teams better monitor and understand their PEPFAR-supported staffing footprint.
 
-Missions should use these briefers to review their staffing investments and trends at the OU level to inform programming and facilitate HRH planning. If there are questions on the summary info provided here, please reach out to Kyle Borces (Data Analyst, iborces@usaid.gov) and Risa Griffin (Data Scientist, rgriffin@usaid.gov)
+Missions should use these briefers to review their staffing investments and trends at the OU level to inform programming and facilitate HRH planning. If there are questions on the summary info provided here, please reach out to the HRH Reporting Helpdesk (hrh-reporting-helpdesk@usaid.gov)
 
 ```{r}
 
@@ -66,7 +66,7 @@ HRH_clean <- HRH_clean %>%
 ## `r params$fiscal_year` HRH Inventory Completeness and Data Quality
 This table shows the number of mechanisms (and their associated staffing expenditure) in `r params$operating_unit` that submitted both the ER and HRH inventory templates for `r params$fiscal_year`. This allows us to better understand the overall completeness of the HRH inventory in terms of the number of mechanisms that were submitted, and the total dollar value that was reported to HRH compared to ER. 
 
-The total staffing expenditure reported in HRH and ER by USAID, CDC, and other agencies should closely match each other as much as possible. The reported HRH and ER staffing expenditures will not always exactly match each other, but are still expected to be aligned. If there are mechanisms that submitted staffing expenses in their Expenditure Report, but did not submit their HRH inventory template, please follow up with partners accordingly to ensure timely submissions in the next reporting cycle.
+The total staffing expenditure reported in HRH and ER by USAID, CDC, and other agencies should closely match each other. The reported HRH and ER staffing expenditures will not always exactly match each other, but are still expected to be aligned. HRH and ER reporting from each implementing partner must collaborate together to ensure alignment of reported staffing expenditure. If there are mechanisms that submitted staffing expenses in their Expenditure Report, but did not submit their HRH inventory template, please follow up with partners accordingly to ensure timely submissions in the next reporting cycle.
 
 ```{r, echo = FALSE, eval = TRUE}
 
@@ -540,9 +540,9 @@ g3
 ```
 
 ## Median Annual Remuneration
-This scatter plot shows the median annual remuneration (i.e. estimated annual salary) of the top 20 employment titles among USAID IP’s. This graph shows the range of remuneration for each employment title where each dot represents an individual’s estimated annual remuneration. 
+This scatter plot shows the median annual remuneration (i.e. estimated annual salary) of the top 10 employment titles among USAID IPs. This graph shows the range of remuneration for each employment title where each dot represents an individual’s estimated annual remuneration. 
 
-```{r fig5, fig.height = 11, fig.width = 10, echo = FALSE, eval = TRUE}
+```{r fig5, fig.height = 8, fig.width = 10, echo = FALSE, eval = TRUE}
 
 # Prepare the remuneration df to be used
 remuneration <- HRH_clean %>%
@@ -585,7 +585,7 @@ sort_list <- remuneration %>%
             n = n()) %>%
   arrange(desc(median_remuneration)) %>%
   filter(n > 10) %>%
-  top_n(n = 20, wt = median_remuneration) %>%
+  top_n(n = 10, wt = median_remuneration) %>%
   mutate(employment_title_wrapped = str_wrap(employment_title, width = 10)) %>%
   pull(employment_title)
   
@@ -633,6 +633,9 @@ local_partner <- HRH_clean %>%
   filter(funding_agency == "USAID") %>%
   filter(operating_unit == params$operating_unit) %>%
   select(fiscal_year, funding_agency, program, is_indigenous_prime_partner, actual_annual_spend) %>%
+  mutate(is_indigenous_prime_partner = case_when(is_indigenous_prime_partner == "Y" ~"Yes",
+                                                 is_indigenous_prime_partner == "N" ~ "No",
+                                                 TRUE ~ is_indigenous_prime_partner)) %>%
   group_by(program, is_indigenous_prime_partner) %>%
   summarise(actual_annual_spend = sum(actual_annual_spend, na.rm = T)) %>%
   arrange(desc(actual_annual_spend)) 
@@ -651,7 +654,7 @@ local_partner <- HRH_clean %>%
              direction = "y",
              show.legend = FALSE) +
   
-  xlab("Program Area") +
+  xlab("Primary Program Area") +
     
   ylab("Total HRH Expenditure") +
     
@@ -659,8 +662,8 @@ local_partner <- HRH_clean %>%
     
   scale_y_continuous(labels = label_dollar()) +
     
-  scale_fill_manual(values = c("Y" = "#1e87a5",
-                              "N" = "#808080")) +
+  scale_fill_manual(values = c("Yes" = "#1e87a5",
+                              "No" = "#808080")) +
 
   theme(panel.background = element_rect(fill = "white"),
         axis.line=element_blank(),
@@ -678,7 +681,7 @@ local_partner <- HRH_clean %>%
 
 ## Work Location
 
-This shows the work location of USAID staff in terms of HRH expenditure and individual count. Most staff are typically located at the community level and facility/roving level. There are typically fewer staff working at the above site level (i.e. non-service delivery staff), but tend to incur higher staffing expenditure.
+This shows the work location of USAID staff in terms of HRH expenditure and individual count. Examine to identify where most staff are located and if this is reflective of the program.  
 
 Above site staff are defined as personnel that are not directly interacting or providing services to beneficiaries (e.g. TA personnel or support staff based mostly in offices). Roving staff are direct service delivery staff that are providing services in multiple facilities.
 
@@ -992,4 +995,6 @@ prime_partners <- HRH_clean %>%
         axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1)) 
 
 ```
+
+For more detailed analysis of the `r params$fiscal_year` HRH Inventory dataset, please contact the HRH Reporting Help Desk (hrh-reporting-helpdesk@usaid.gov). This may include program-specific deep dives of C&T, DREAMS, OVC, and/or KP mechanisms or reviewing the data using more customized visuals.
 
