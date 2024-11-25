@@ -15,16 +15,12 @@ library(tibble)
 options(dplyr.summarise.inform = FALSE)
 
 # Import the raw HRH dataset
-load(file = "./4. Outputs/RDS/FY23_cleanHRH.rds")
+load(file = "./4. Outputs/RDS/FY24_cleanHRH.rds")
 
 # Create list of operating units that we want QC reports for
 OU_list <- HRH_clean %>%
   distinct(operating_unit) %>%
   pull(operating_unit)
-
-# Remove any variables we don't need
-HRH_clean <- HRH_clean %>%
-  select(-DREAMS_budget_23, -DREAMS_tagged_23, -DREAMS_AGYWs_23)
 
 # Loop through each OU to create a dataset for each OU
 for (i in 1:length(OU_list)) {
@@ -42,7 +38,7 @@ for (i in 1:length(OU_list)) {
   writeData(wb, sheet = 1, cleanHRH, startCol = 1, startRow = 1, colNames = TRUE)
   
   # Establish the workbook name based on the OU
-  wbName <- paste0("./4. Outputs/OU raw datasets/Pre clean/", OU, "_FY23_Unredacted_HRH_Post_Clean.xlsx")
+  wbName <- paste0("./4. Outputs/OU raw datasets/Pre clean/", OU, "_FY24_Unredacted_HRH_Pre_Clean_20241125.xlsx")
   
   # Export each QC report in Excel
   saveWorkbook(wb, wbName, overwrite = TRUE) 
