@@ -25,7 +25,7 @@ cleanMER <- rawMER %>%
 
 ## Disaggregate further
 cleanMER <- cleanMER %>%
-  group_by(fiscal_year, operatingunit, snu1, psnu, prime_partner_name, funding_agency, mech_code, mech_name, indicator, standardizeddisaggregate) %>%
+  group_by(fiscal_year, operatingunit, country, snu1, psnu, prime_partner_name, funding_agency, mech_code, mech_name, indicator, standardizeddisaggregate) %>%
   summarise(cumulative = sum(cumulative, na.rm = TRUE),
             targets = sum(targets, na.rm = TRUE))
 
@@ -39,7 +39,7 @@ cleanMER <- cleanMER %>%
 
 # Create a summary list of mech codes with OVC_SERV > 0 
 OVC_mechs <- cleanMER %>%
-  group_by(fiscal_year, funding_agency, indicator, operatingunit, prime_partner_name, mech_code, mech_name) %>%
+  group_by(fiscal_year, funding_agency, indicator, operatingunit, country, prime_partner_name, mech_code, mech_name) %>%
   tally()
 
 #Export the file

@@ -22,29 +22,11 @@ options(dplyr.summarise.inform = FALSE)
 fin_data_orig <- read.delim("./1. Data/Financial_Structured_Datasets_COP17-24_20241115.txt") # read in FSD dataset
 load(file = "./4. Outputs/RDS/FY24_cleanHRH.rds") # cleaned HRH dataset
 load(file = "./4. Outputs/RDS/HRH_ER_merged_21_24.rds") # HRH-ER merged dataset
+OVC_mechs <- read_excel("./4. Outputs/FY24_OVC_mechs.xlsx")
+FY24_budget <- read.delim("./1. Data/Comprehensive_Budget_Datasets_COP17-24_20241115.txt", header = TRUE, stringsAsFactors = FALSE)
 
-
-OVC_mechs <- read_excel("./4. Outputs/FY23_OVC_mechs.xlsx")
-FY23_budget <- read_excel("./1. Data/Comprehensive_Budget_Datasets_COP17-23_20231114.xlsx")
-
-### EDIT: Load the G2Gs list
+### EDIT: Load the list of G2G mechs
 G2Gs <- read_excel("./1. Data/FY24 PEPFAR G2G Mechanisms.xlsx")
-
-# Clean up the OVC mechs 
-OVC_mechs <- OVC_mechs %>%
-  filter(funding_agency == "USAID") %>%
-  select(mech_code) %>%
-  pull(mech_code)
-
-# Clean up the DREAMS mechs
-DREAMS_mechs <- FY23_budget %>%
-  filter(implementation_year == 2023,
-         fundingagency == "USAID" | fundingagency == "USAID/WCF",
-         initiative_name == "DREAMS",
-         record_type == "Implementing Mechanism",
-         cop_budget_total > 0) %>%
-  distinct(mech_code) %>%
-  pull(mech_code)
 
 ######## EDIT: Clean up the G2G mechs #########
 G2G_mechs <- G2Gs %>%
@@ -71,29 +53,27 @@ HRH_ER_merged <- HRH_ER_merged %>%
 
 # Remove the keyword flags in the merged dataset
 HRH_ER_merged <- HRH_ER_merged %>%
-  filter(GHSC_UN_keywordflags == "FALSE")
+  filter(UN_keywordflags == "FALSE")
 
-###---------- Identifying any GHSC or multilateral mechanisms to be removed from HRH and ER dataset --------------------------
+###---------- Identifying any UN multilateral mechanisms to be removed from HRH and ER dataset --------------------------
 
 # pull ER mech codes to be removed by keyword flag
 removedERmechs <- fin_data_orig %>%
-  mutate(keyword_flags = if_else(grepl("^GHSC", mech_name) == TRUE | 
-                                   grepl("UNAID", mech_name) == TRUE |
-                                   grepl("UNICEF", mech_name) == TRUE |
-                                   grepl("World Health Organization", mech_name) == TRUE |
-                                   grepl("U.N.", mech_name) == TRUE | 
-                                   grepl("United Nation", mech_name) == TRUE, "TRUE", "FALSE"))  %>%
+  mutate(keyword_flags = if_else(grepl("UNAID", mech_name) == TRUE |
+                                 grepl("UNICEF", mech_name) == TRUE |
+                                 grepl("World Health Organization", mech_name) == TRUE |
+                                 grepl("U.N.", mech_name) == TRUE | 
+                                 grepl("United Nation", mech_name) == TRUE, "TRUE", "FALSE"))  %>%
   filter(keyword_flags == "TRUE") %>%
   pull(mech_code)
 
 # pull HRH mech codes to be removed via keyword flag
 removedHRHmechs <- HRH_data_orig %>%
-  mutate(keyword_flags = if_else(grepl("^GHSC", mech_name) == TRUE | 
-                                   grepl("UNAID", mech_name) == TRUE |
-                                   grepl("UNICEF", mech_name) == TRUE |
-                                   grepl("World Health Organization", mech_name) == TRUE |
-                                   grepl("U.N.", mech_name) == TRUE | 
-                                   grepl("United Nation", mech_name) == TRUE, "TRUE", "FALSE"))  %>%
+  mutate(keyword_flags = if_else(grepl("UNAID", mech_name) == TRUE |
+                                 grepl("UNICEF", mech_name) == TRUE |
+                                 grepl("World Health Organization", mech_name) == TRUE |
+                                 grepl("U.N.", mech_name) == TRUE | 
+                                 grepl("United Nation", mech_name) == TRUE, "TRUE", "FALSE"))  %>%
   filter(keyword_flags == "TRUE") %>%
   pull(mech_code)
 
@@ -103,13 +83,14 @@ removedMechs <- unique(removedMechs)
 
 
 ## ------------- Do some initial data cleaning for ER ------------------------
-fin_data2123 <- fin_data_orig %>% 
-  filter(implementation_year == 2021 | implementation_year == 2022 | implementation_year == 2023) %>%
+fin_data2124 <- fin_data_orig %>% 
+  filter(implementation_year == 2021 | implementation_year == 2022 | implementation_year == 2023 | implementation_year == 2024) %>%
   
   # Add prime/sub column
   mutate(ER_prime_or_sub = case_when(implementation_year == 2021 & cost_category == "Subrecipient" ~ "Sub",
                                      implementation_year == 2022 & subrecipient_name != "None" ~ "Sub",
                                      implementation_year == 2023 & subrecipient_name != "None" ~ "Sub",
+                                     implementation_year == 2024 & subrecipient_name != "None" ~ "Sub",
                                      TRUE ~ "Prime")) %>%
   
   # Adding a column that allows us to know if a row of ER data is relevant to staffing. Note that we decided to remove Subrecipient as a relevant sub_cost_category for 2022 
@@ -128,6 +109,12 @@ fin_data2123 <- fin_data_orig %>%
                                                                     sub_cost_category == "Contracted Health Care Workers- Ancillary" |
                                                                     cost_category == "Fringe Benefits") ~ "Y",
                                   implementation_year == 2023  & (sub_cost_category == "Salaries- Health Care Workers- Clinical" |
+                                                                    sub_cost_category == "Salaries- Health Care Workers- Ancillary" |
+                                                                    sub_cost_category == "Salaries- Other Staff" |
+                                                                    sub_cost_category == "Contracted Health Care Workers- Clinical" |
+                                                                    sub_cost_category == "Contracted Health Care Workers- Ancillary" |
+                                                                    cost_category == "Fringe Benefits") ~ "Y",
+                                  implementation_year == 2024  & (sub_cost_category == "Salaries- Health Care Workers- Clinical" |
                                                                     sub_cost_category == "Salaries- Health Care Workers- Ancillary" |
                                                                     sub_cost_category == "Salaries- Other Staff" |
                                                                     sub_cost_category == "Contracted Health Care Workers- Clinical" |
@@ -155,20 +142,20 @@ fin_data2123 <- fin_data_orig %>%
                                       TRUE ~ "Other"))
 
 # Now remove the mech codes with keyword flags from ER/HRH
-fin_data2123 <- fin_data2123 %>%
+fin_data2124 <- fin_data2124 %>%
   filter(!ER_mech_code %in% removedMechs)
 
 
 ## --------------Do some data cleaning for HRH -------------------------
 
 # Set non-monetary expenditures to zero since we cannot do a 1:1 comparison with ER
-HRH_data2123 <- HRH_data_orig %>%
+HRH_data2124 <- HRH_data_orig %>%
   mutate(actual_non_monetary_expenditure = 0)
 
 # Pivoting the HRH dataset so that the three columns of "annual expenditure", "annual fringe", and "nonmonetary_costs" are put into a single column called "HRH_expenditure_amt"
 #    This needs to be done to match the structure of the ER dataset so the two can properly merge
 
-HRH_data2123 <- HRH_data2123 %>% # sort columns first so that the three columns of interest are next to each other, then convert to wide format
+HRH_data2124 <- HRH_data2124 %>% # sort columns first so that the three columns of interest are next to each other, then convert to wide format
   select(1:fiscal_year,
          annual_expenditure,
          annual_fringe,
@@ -177,7 +164,7 @@ HRH_data2123 <- HRH_data2123 %>% # sort columns first so that the three columns 
   pivot_longer(cols=annual_expenditure:actual_non_monetary_expenditure, names_to='salary_or_fringe', values_to = 'HRH_expenditure_amt')
 
 # Creating a sub_cost_category to match the ER dataset's sub_cost_category. This logic is based on Sarah's Tableau Prep code from 2021.
-HRH_data2123 <- HRH_data2123 %>% 
+HRH_data2124 <- HRH_data2124 %>% 
   mutate(sub_cost_category = case_when((salary_or_fringe == "annual_fringe") & (prime_or_sub == "Prime") ~ "Fringe Benefits",
                                        (prime_or_sub == "Sub") ~ "Subrecipient",
                                        (prime_or_sub == "Prime") & (mode_of_hiring == "Salary") & (er_category == "HCW: Clinical") ~ "Salaries- Health Care Workers- Clinical",
@@ -203,16 +190,16 @@ HRH_data2123 <- HRH_data2123 %>%
   select(-funding_agency)
 
 # Now remove the mech codes with keyword flags from ER/HRH
-HRH_data2123 <- HRH_data2123 %>%
+HRH_data2124 <- HRH_data2124 %>%
   filter(!mech_code %in% removedMechs)
 
 # EDIT: revert back the SD vs NSD names to be consistent with ER
-HRH_data2123 <- HRH_data2123 %>%
+HRH_data2124 <- HRH_data2124 %>%
   mutate(interaction_type = case_when(interaction_type == "Non-Service Delivery" ~ "Non Service Delivery",
                                       interaction_type == "Direct Service Delivery" ~ "Direct Service Delivery",
                                       TRUE ~ interaction_type))
 
-fin_data2123 <- fin_data2123 %>%
+fin_data2124 <- fin_data2124 %>%
   mutate(interaction_type = case_when(interaction_type == "Non Service Delivery" ~ "Non Service Delivery",
                                       interaction_type == "Service Delivery" ~ "Direct Service Delivery",
                                       TRUE ~ interaction_type))
@@ -222,9 +209,16 @@ fin_data2123 <- fin_data2123 %>%
 # Create list of operating units that we want QC reports for
 OU_list <- HRH_ER_merged %>%
   distinct(operating_unit) %>%
-  filter(operating_unit != "West Africa Region" &
-           operating_unit != "Asia Region" &
-           operating_unit != "Western Hemisphere Region") %>%
+  filter(operating_unit != "Asia Region" &
+           operating_unit != "West Africa Region" &
+           operating_unit != "Western Hemisphere Region" & 
+           operating_unit != "Caribbean Region" &
+           operating_unit != "Central Asia Region" &
+           operating_unit != "Central and South America Region" &
+           operating_unit != "Pacific Region" &
+           operating_unit != "South and Southeast Asia Region" &
+           operating_unit != "West Africa Region 1" &
+           operating_unit != "West Africa Region 2") %>%
   pull(operating_unit)
 
 ## Execute a for loop that creates a QC report for each OU
@@ -232,6 +226,24 @@ OU_list <- HRH_ER_merged %>%
 for (i in 1:length(OU_list)) {
   
   OU <- OU_list[i] # loop through each OU in the OU list
+  
+  # Clean up the OVC mechs 
+  OVC_mechs_OU <- OVC_mechs %>%
+    filter(funding_agency == "USAID",
+           operatingunit == OU) %>%
+    select(mech_code) %>%
+    pull(mech_code)
+  
+  # Clean up the DREAMS mechs
+  DREAMS_mechs_OU <- FY24_budget %>%
+    filter(implementation_year == 2024,
+           fundingagency == "USAID" | fundingagency == "USAID/WCF",
+           operatingunit == OU,
+           initiative_name == "DREAMS",
+           record_type == "Implementing Mechanism",
+           cop_budget_total > 0) %>%
+    distinct(mech_code) %>%
+    pull(mech_code)
   
   # Top level summary by Prime/Sub
   topLevel <- HRH_ER_merged %>%
@@ -291,21 +303,21 @@ for (i in 1:length(OU_list)) {
   OVC_check <- HRH_data_orig %>%
     filter(fiscal_year == max(fiscal_year),
            operating_unit == OU,
-           mech_code %in% OVC_mechs) %>%
+           mech_code %in% OVC_mechs_OU) %>%
     group_by(fiscal_year, operating_unit, mech_code, mech_name) %>%
-    summarise(total_OVC_staff = length(individual_count[beneficiary == "OVC"])) %>%
+    summarise(total_OVC_staff = length(individual_count[targeted_beneficiary == "OVC"])) %>%
     mutate(action_item = if_else(total_OVC_staff == 0, "No OVC staff was reported for this mechanism, but our records indicate this mechanism has OVC_SERV targets. Please review and ensure that the beneficiary column for OVC staff is accurate", ""))
-  
+
   # DREAMS Check: Filter the HRH dataset for DREAM(S) related mech names, and then summarize total staff with DREAMS keyword search in Comments column
   DREAMS_check <- HRH_data_orig %>%
     filter(fiscal_year == max(fiscal_year),
            operating_unit == OU,
-           mech_code %in% DREAMS_mechs) %>%
-    mutate(DREAMS_keyword = if_else(grepl("DREAM", comments) == TRUE, "TRUE", "FALSE")) %>%
+           mech_code %in% DREAMS_mechs_OU) %>%
+    mutate(DREAMS_staff_primarily = if_else(is_dreams_primarily == "Yes", "TRUE", "FALSE")) %>%
     group_by(fiscal_year, operating_unit, mech_code, mech_name) %>%
-    summarise(total_DREAMS_staff = length(individual_count[DREAMS_keyword == "TRUE"])) %>%
-    mutate(action_item = if_else(total_DREAMS_staff == 0, "No DREAMS staff was reported for this mechanism, but records indicate this mechanism received some budget for DREAMS. Please review and ensure that all staff working on DREAMS are counted by typing 'DREAMS' in the Comments column", ""))
-  
+    summarise(total_DREAMS_staff = length(individual_count[DREAMS_staff_primarily == "TRUE"])) %>%
+    mutate(action_item = if_else(total_DREAMS_staff == 0, "No DREAMS staff was reported for this mechanism, but records indicate this mechanism received some budget for DREAMS. Please review and ensure that the `Primarily supports DREAMS programming` column for all DREAMS staff is accurate", ""))
+
   ########## EDIT: G2Gs check ################
   G2Gs_check <- HRH_data_orig %>%
     filter(fiscal_year == max(fiscal_year),
@@ -392,7 +404,7 @@ for (i in 1:length(OU_list)) {
                                     dataQuality_flag == "SUB staffing expenditure is different by > 15% of SUB staffing expenditure reported to ER" & Yes_or_No == "Yes" ~ "Sub HRH expenditures were different from Sub ER staffing expenditures by at least 15%. Please review for closer alignment",
                                     dataQuality_flag == "Staff reported under 'other' employment titles is > 20% of total staff" & Yes_or_No == "Yes" ~ "Over 20% of employment titles were reported under `other` categories. Please review all 'other' employment titles that were submitted, and determine whether a more specific employment title will better reflect their roles/responsibilities",
                                     dataQuality_flag == "No staff reported with OVC beneficiaries, even though this mechanism has OVC program targets" & Yes_or_No == "Yes" ~ "No OVC staff was reported for this mechanism, but our records indicate this mechanism has OVC_SERV targets. Please review and ensure that the beneficiary column for OVC staff is accurate",
-                                    dataQuality_flag == "No staff reported under DREAMS, even though this mechanism has a DREAMS-related budget" & Yes_or_No == "Yes" ~ "No DREAMS staff was reported for this mechanism, but records indicate this mechanism received some budget for DREAMS. Please review and ensure that all staff working on DREAMS are counted by typing 'DREAMS' in the Comments column",
+                                    dataQuality_flag == "No staff reported under DREAMS, even though this mechanism has a DREAMS-related budget" & Yes_or_No == "Yes" ~ "No DREAMS staff was reported for this mechanism, but records indicate this mechanism received some budget for DREAMS. Please review and ensure that the `Primarily supports DREAMS programming` column for all DREAMS staff is accurate",
                                     
                                     #### EDIT: G2Gs check
                                     dataQuality_flag == "No staff reported as seconded staff, even though this mechanism is a G2G mechanism" & Yes_or_No == "Yes" ~ "No seconded staff were reported for this mechanism, but we expect some seconded staff here because this is a Government-to-Government (G2G) mechanism. Please review and ensure that all seconded staff are reported accurately for this G2G mechanism",
@@ -436,7 +448,7 @@ for (i in 1:length(OU_list)) {
   wb <- loadWorkbook("./1. Data/HRH_QC_Reporting_Template_20231118_vF - Deep Dive.xlsx")
   
   # Set workbook title
-  wbTitle <- paste0(OU, " - ", "FY23 Data Quality Checks on Submitted HRH Reporting Templates") 
+  wbTitle <- paste0(OU, " - ", "FY24 Data Quality Checks on Submitted HRH Reporting Templates") 
   
   # Load the data frames into each Excel sheet as needed
   writeData(wb, sheet = 1, wbTitle, startCol = 2, startRow = 3, colNames = FALSE)
@@ -451,7 +463,7 @@ for (i in 1:length(OU_list)) {
   writeData(wb, sheet = 8, G2Gs_check, startCol = 2, startRow = 4, colNames = FALSE)
   
   # Establish the workbook name based on the OU
-  wbName <- paste0("./4. Outputs/QC Reports/Country level/FY23 HRH Data Quality Checks - Final - ", OU, ".xlsx")
+  wbName <- paste0("./4. Outputs/QC Reports/Country level/FY24 HRH Data Quality Checks - ", OU, ".xlsx")
   
   # Export each QC report in Excel
   saveWorkbook(wb, wbName, overwrite = TRUE) #to automate later
