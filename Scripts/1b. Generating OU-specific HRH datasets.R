@@ -40,9 +40,9 @@ for (i in 1:length(OU_list)) {
   
   # Load the data frames into each Excel sheet as needed
   writeData(wb, sheet = 1, cleanHRH, startCol = 1, startRow = 1, colNames = TRUE)
-
+  
   # Establish the workbook name based on the OU
-  wbName <- paste0("./4. Outputs/OU raw datasets/Post clean/", OU, "_FY23_Unredacted_HRH_Post_Clean.xlsx")
+  wbName <- paste0("./4. Outputs/OU raw datasets/Pre clean/", OU, "_FY23_Unredacted_HRH_Post_Clean.xlsx")
   
   # Export each QC report in Excel
   saveWorkbook(wb, wbName, overwrite = TRUE) 
@@ -51,7 +51,6 @@ for (i in 1:length(OU_list)) {
   print(paste0(OU, " - workbook complete"))
   
 }
-
 
 
 

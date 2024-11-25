@@ -4,7 +4,7 @@
 ### -------- Pull a list of mech codes where OVC_SERV > 0 for 2023 within USAID
 
 #Import 2023 MER targets
-rawMER <- read.delim("./1. Data/MER_Structured_Datasets_PSNU_IM_FY20-23_20221216_v2_1.txt", header = TRUE, stringsAsFactors = FALSE)
+rawMER <- read.delim("./1. Data/MER_Structured_Datasets_PSNU_IM_FY21-24_20231114_v1_1.txt", header = TRUE, stringsAsFactors = FALSE)
 #load("./4. Outputs/RDS/FY23_rawMER.rds")
 
 ## 3. Do some data cleaning
@@ -45,4 +45,6 @@ OVC_mechs <- cleanMER %>%
 
 #Export the file
 write_xlsx(OVC_mechs,"./4. Outputs/FY23_OVC_mechs.xlsx") 
+
+
 

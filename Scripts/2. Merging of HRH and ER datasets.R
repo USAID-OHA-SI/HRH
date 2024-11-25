@@ -1,7 +1,7 @@
 ####################################################################################################################
 ## Title: ER and HRH Merged Dataset
 ## Purpose: This code cleans and merges the HRH Inventory dataset and ER dataset, which is then used in the HRH Inventory Tableau Dashboard
-## Developer: By Caroline Kasman & Kyle Borces
+## Developer: By Kyle Borces
 ####################################################################################################################
 
 ############################################ General prep ##########################################################
@@ -78,47 +78,47 @@ simple_findata <- fin_data2123 %>%
 # since this pertains to subrecipient costs less than 25k (which includes both HRH and non-HRH costs)
 
 simple_findata <- simple_findata %>% 
-      mutate(HRH_relevant = case_when(implementation_year == 2021  & (sub_cost_category == "Salaries- Health Care Workers- Clinical" |
-                                                                      sub_cost_category == "Salaries- Health Care Workers- Ancillary" |
-                                                                      sub_cost_category == "Salaries- Other Staff" |
-                                                                      sub_cost_category == "Contracted Health Care Workers- Clinical" |
-                                                                      sub_cost_category == "Contracted Health Care Workers- Ancillary" |
-                                                                      cost_category == "Fringe Benefits" |
-                                                                      cost_category == "Subrecipient") ~ "Y",
-                                      implementation_year == 2022  & (sub_cost_category == "Salaries- Health Care Workers- Clinical" |
-                                                                      sub_cost_category == "Salaries- Health Care Workers- Ancillary" |
-                                                                      sub_cost_category == "Salaries- Other Staff" |
-                                                                      sub_cost_category == "Contracted Health Care Workers- Clinical" |
-                                                                      sub_cost_category == "Contracted Health Care Workers- Ancillary" |
-                                                                      cost_category == "Fringe Benefits") ~ "Y",
-                                      implementation_year == 2023  & (sub_cost_category == "Salaries- Health Care Workers- Clinical" |
-                                                                        sub_cost_category == "Salaries- Health Care Workers- Ancillary" |
-                                                                        sub_cost_category == "Salaries- Other Staff" |
-                                                                        sub_cost_category == "Contracted Health Care Workers- Clinical" |
-                                                                        sub_cost_category == "Contracted Health Care Workers- Ancillary" |
-                                                                        cost_category == "Fringe Benefits") ~ "Y",
-                                      TRUE ~ "N")) 
+  mutate(HRH_relevant = case_when(implementation_year == 2021  & (sub_cost_category == "Salaries- Health Care Workers- Clinical" |
+                                                                    sub_cost_category == "Salaries- Health Care Workers- Ancillary" |
+                                                                    sub_cost_category == "Salaries- Other Staff" |
+                                                                    sub_cost_category == "Contracted Health Care Workers- Clinical" |
+                                                                    sub_cost_category == "Contracted Health Care Workers- Ancillary" |
+                                                                    cost_category == "Fringe Benefits" |
+                                                                    cost_category == "Subrecipient") ~ "Y",
+                                  implementation_year == 2022  & (sub_cost_category == "Salaries- Health Care Workers- Clinical" |
+                                                                    sub_cost_category == "Salaries- Health Care Workers- Ancillary" |
+                                                                    sub_cost_category == "Salaries- Other Staff" |
+                                                                    sub_cost_category == "Contracted Health Care Workers- Clinical" |
+                                                                    sub_cost_category == "Contracted Health Care Workers- Ancillary" |
+                                                                    cost_category == "Fringe Benefits") ~ "Y",
+                                  implementation_year == 2023  & (sub_cost_category == "Salaries- Health Care Workers- Clinical" |
+                                                                    sub_cost_category == "Salaries- Health Care Workers- Ancillary" |
+                                                                    sub_cost_category == "Salaries- Other Staff" |
+                                                                    sub_cost_category == "Contracted Health Care Workers- Clinical" |
+                                                                    sub_cost_category == "Contracted Health Care Workers- Ancillary" |
+                                                                    cost_category == "Fringe Benefits") ~ "Y",
+                                  TRUE ~ "N")) 
 
 
 ## 7. Renaming columns so we can differentiate between the ER columns and HRH columns when we combine the two datasets.
 simple_findata <- simple_findata %>%
-        rename(ER_year = implementation_year,
-               ER_operatingunit = operatingunit,
-               ER_country = country,
-               ER_program = program,
-               ER_mech_code = mech_code,
-               ER_mech_name = mech_name,
-               ER_prime_partner_name = prime_partner_name,
-               ER_sub_cost_category = sub_cost_category,
-               ER_cost_category = cost_category,
-               ER_fundingagency = fundingagency,
-               ER_expenditure_amt = expenditure_amt)
+  rename(ER_year = implementation_year,
+         ER_operatingunit = operatingunit,
+         ER_country = country,
+         ER_program = program,
+         ER_mech_code = mech_code,
+         ER_mech_name = mech_name,
+         ER_prime_partner_name = prime_partner_name,
+         ER_sub_cost_category = sub_cost_category,
+         ER_cost_category = cost_category,
+         ER_fundingagency = fundingagency,
+         ER_expenditure_amt = expenditure_amt)
 
 ## 8. Filter out South Africa in ER dataset since this was not reported in HRH for 2021
-  simple_findata <- simple_findata %>%
-    filter(!(ER_year == 2021 & ER_operatingunit == "South Africa")) 
+simple_findata <- simple_findata %>%
+  filter(!(ER_year == 2021 & ER_operatingunit == "South Africa")) 
 
-  
+
 ## 9. Cleaning up the ER data: Simplifying funding agencies to be only USAID, CDC, or Other.
 simple_findata <- simple_findata %>% 
   mutate(ER_fundingagency = case_when((ER_fundingagency == "USAID") | (ER_fundingagency == "USAID/WCF") ~ "USAID",
@@ -137,7 +137,7 @@ HRH_data2123 <- HRH_clean %>%
   mutate(annual_expenditure = if_else(is.na(annual_expenditure) == TRUE, 0, annual_expenditure),
          annual_fringe = if_else(is.na(annual_fringe) == TRUE, 0, annual_fringe),
          
-    # NOTE: WE HAVE DECIDED TO SET NON MONETARY VALUES TO ZERO IN HRH DATASET FOR THE HRH-ER COMPARISONS SINCE WE CANNOT DO A 1:1 COMPARISON WITH ER
+         # NOTE: WE HAVE DECIDED TO SET NON MONETARY VALUES TO ZERO IN HRH DATASET FOR THE HRH-ER COMPARISONS SINCE WE CANNOT DO A 1:1 COMPARISON WITH ER
          actual_non_monetary_expenditure = 0)
 
 ## 11. Pivoting the HRH dataset so that the three columns of "annual expenditure", "annual fringe", and "nonmonetary_costs" are put into a single column called "HRH_expenditure_amt"
@@ -204,33 +204,33 @@ simple_hrhdata <- simple_hrhdata %>%
 ############################################ Merging the ER and HRH datasets ##########################################################
 
 ## 16. Merge the two datasets using a full join using our key list of grouped variables
-  HRH_ER_merged <- full_join(simple_findata, simple_hrhdata, by = c("ER_year" = "fiscal_year",
-                                                                    "ER_operatingunit" = "operating_unit",
-                                                                    "ER_country" = "country",
-                                                                    "ER_program" = "program",
-                                                                    "ER_fundingagency" = "HRH_funding_agency",
-                                                                    "ER_prime_partner_name" = "prime_partner_name",
-                                                                    "ER_prime_or_sub" = "prime_or_sub",
-                                                                    "ER_mech_code" = "mech_code",
-                                                                    "ER_mech_name" = "mech_name",
-                                                                    "ER_cost_category" = "cost_category",
-                                                                    "GHSC_UN_keywordflags" = "HRH_GHSC_UN_keywordflags",
-                                                                    "ER_sub_cost_category" = "sub_cost_category"))
+HRH_ER_merged <- full_join(simple_findata, simple_hrhdata, by = c("ER_year" = "fiscal_year",
+                                                                  "ER_operatingunit" = "operating_unit",
+                                                                  "ER_country" = "country",
+                                                                  "ER_program" = "program",
+                                                                  "ER_fundingagency" = "HRH_funding_agency",
+                                                                  "ER_prime_partner_name" = "prime_partner_name",
+                                                                  "ER_prime_or_sub" = "prime_or_sub",
+                                                                  "ER_mech_code" = "mech_code",
+                                                                  "ER_mech_name" = "mech_name",
+                                                                  "ER_cost_category" = "cost_category",
+                                                                  "GHSC_UN_keywordflags" = "HRH_GHSC_UN_keywordflags",
+                                                                  "ER_sub_cost_category" = "sub_cost_category"))
 
 
 ## 17. Rename the matching columns (since they are equivalent in the ER and HRH datasets) for better readability
-  HRH_ER_merged <- HRH_ER_merged %>%
-    rename(year = ER_year,
-           operating_unit = ER_operatingunit,
-           country = ER_country,
-           program = ER_program,
-           funding_agency = ER_fundingagency,
-           prime_partner_name = ER_prime_partner_name,
-           prime_or_sub = ER_prime_or_sub,
-           mech_code = ER_mech_code,
-           mech_name = ER_mech_name,
-           cost_category = ER_cost_category,
-           sub_cost_category = ER_sub_cost_category) 
+HRH_ER_merged <- HRH_ER_merged %>%
+  rename(year = ER_year,
+         operating_unit = ER_operatingunit,
+         country = ER_country,
+         program = ER_program,
+         funding_agency = ER_fundingagency,
+         prime_partner_name = ER_prime_partner_name,
+         prime_or_sub = ER_prime_or_sub,
+         mech_code = ER_mech_code,
+         mech_name = ER_mech_name,
+         cost_category = ER_cost_category,
+         sub_cost_category = ER_sub_cost_category) 
 
 
 ########################################### Determining missing HRH mechanisms ########################################################
@@ -287,6 +287,8 @@ yearCheck <- finalMerge %>%
 
 write.csv(finalMerge, "./4. Outputs/HRH_ER_merged_21_23.csv", row.names=FALSE)
 save(finalMerge, file = "./4. Outputs/RDS/HRH_ER_merged_21_23.rds")
+
+
 
 
 
