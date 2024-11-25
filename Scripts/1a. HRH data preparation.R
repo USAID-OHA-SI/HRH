@@ -1,4 +1,5 @@
-### THE PURPOSE OF THIS SCRIPT IS TO DO SOME DATA CLEANING OF THE 2023 RAW HRH DATASET
+### PURPOSE: INITIAL DATA PREPARATION AND CLEANING OF THE HRH INVENTORY DATASET
+### Code developed by: Kyle Borces
 
 ## 1.installing and loading relevant packages/libraries
 library(readxl)

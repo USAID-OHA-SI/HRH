@@ -1,8 +1,8 @@
 ####################################################################################################################
 ## Title: Trimming down MER dataset
 ## Purpose: This code cleans up the MER dataset to the indicators we mainly need before importing into Tableau
-## Developer: By Kyle Borces
-## Last updated: By Kyle Borces, 11/27/2022
+## Code developed by: Kyle Borces
+## Last updated: 11/25/2024
 ####################################################################################################################
 
 library(readxl)
@@ -15,20 +15,18 @@ library(janitor)
 library(readxl)
 
 ## 2a.  Uploading MER structured dataset from Panorama at PSNU level
-#rawMER <- read.delim("./1. Data/MER_Structured_Datasets_PSNU_IM_FY21-24_20231114_v1_1.txt", header = TRUE, stringsAsFactors = FALSE)
-#rawMER <- read.delim("./MER_Structured_Datasets_PSNU_IM_FY21-24_20231114_v1_1.txt", header = TRUE, stringsAsFactors = FALSE)
-
+#rawMER <- read.delim("./1. Data/MER_Structured_Datasets_PSNU_IM_FY22-25_20241115_v1_1.txt", header = TRUE, stringsAsFactors = FALSE)
 
 ## 2b.Save the data frame as an .rds for later use
-#save(rawMER, file = "./4. Outputs/RDS/FY23_rawMER.rds")
-load(file = "./4. Outputs/RDS/FY23_rawMER.rds")
+#save(rawMER, file = "./4. Outputs/RDS/FY24_rawMER.rds")
+load(file = "./4. Outputs/RDS/FY24_rawMER.rds")
 
 
 ## 3. Do some data cleaning
 cleanMER <- rawMER %>%
   
   # Filter for only the relevant years
-  filter(fiscal_year == 2023) 
+  filter(fiscal_year == 2024) 
   
   # Only select relevant indicators for now
 cleanMER <- cleanMER %>%
@@ -66,7 +64,6 @@ cleanMER <- cleanMER %>%
   mutate(pct_targetAchieved = cumulative / targets) %>%
   select(-standardizeddisaggregate) # remove disaggregate column
 
-
 ## 4. Convert indicators column into wide format to show both targets and cumulative values of the filtered indicators
 cleanMER <- cleanMER %>%
   gather(targCum, Value, (cumulative:pct_targetAchieved)) %>%
@@ -87,7 +84,7 @@ cleanMER[, grepl("^PrEP", names(cleanMER))] <- lapply(cleanMER[, grepl("^PrEP", 
 
 
 ## 5. Export as xls
-write_xlsx(cleanMER,"./1. Data/MER_Structured_Datasets_PSNU_IM_FY23_ONLY_CLEAN.xlsx") 
+write_xlsx(cleanMER,"./1. Data/MER_Structured_Datasets_PSNU_IM_FY24_ONLY_CLEAN.xlsx") 
 
   
 

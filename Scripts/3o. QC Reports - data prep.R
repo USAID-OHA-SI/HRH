@@ -1,17 +1,16 @@
-### PURPOSE: TO PREPARE DATASETS WE NEED FOR THE QC REPORTS.
+### PURPOSE: TO PREPARE ANY EXTERNAL DATASETS WE NEED FOR THE QC REPORTS.
+### Code developed by: Kyle Borces
 
+### -------- Pull a list of mech codes where OVC_SERV > 0 for 2023 within USAID--------- ####
 
-### -------- Pull a list of mech codes where OVC_SERV > 0 for 2023 within USAID
-
-#Import 2023 MER targets
-rawMER <- read.delim("./1. Data/MER_Structured_Datasets_PSNU_IM_FY21-24_20231114_v1_1.txt", header = TRUE, stringsAsFactors = FALSE)
-#load("./4. Outputs/RDS/FY23_rawMER.rds")
+#Import 2024 MER targets
+load(file = "./4. Outputs/RDS/FY24_rawMER.rds")
 
 ## 3. Do some data cleaning
 cleanMER <- rawMER %>%
   
   # Filter for only the relevant years
-  filter(fiscal_year == 2023) %>%
+  filter(fiscal_year == 2024) %>%
   
   # Only select relevant indicators for now
   filter(grepl("^OVC", indicator)) %>%
@@ -33,7 +32,7 @@ cleanMER <- cleanMER %>%
 # Set all MER indicator columns as numeric
 cleanMER[, grepl("^OVC", names(cleanMER))] <- lapply(cleanMER[, grepl("^OVC", names(cleanMER))], as.numeric)
 
-# Filter for OVC only
+# Filter for OVC only where OVC_SERV > 0
 cleanMER <- cleanMER %>%
   filter(indicator == "OVC_SERV",
          targets > 0)
@@ -44,7 +43,7 @@ OVC_mechs <- cleanMER %>%
   tally()
 
 #Export the file
-write_xlsx(OVC_mechs,"./4. Outputs/FY23_OVC_mechs.xlsx") 
+write_xlsx(OVC_mechs,"./4. Outputs/FY24_OVC_mechs.xlsx") 
 
 
 

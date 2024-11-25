@@ -1,7 +1,7 @@
 ####################################################################################################################
 ## Title: ER and HRH Merged Dataset
 ## Purpose: This code cleans and merges the HRH Inventory dataset and ER dataset, which is then used in the HRH Inventory Tableau Dashboard
-## Developer: By Kyle Borces
+## Code developed by: Kyle Borces
 ####################################################################################################################
 
 ############################################ General prep ##########################################################

@@ -2,7 +2,7 @@
 ## Title: HRH Structured Dataset - Data validation checks
 ## Purpose: This code performs a series of data quality checks on the HRH structured dataset
 ## Developer: By Kyle Borces
-## Last updated: 11/12/2024
+## Last updated: 11/25/2024
 ####################################################################################################################
 
 library(readxl)
@@ -19,9 +19,11 @@ library(tibble)
 options(dplyr.summarise.inform = FALSE)
 
 ## ------------------ Import the needed files for HRH, ER, and HRH-ER datasets --------
-fin_data_orig <- read.delim("./1. Data/Financial_Structured_Datasets_COP17-23_20231215.txt") # read in FSD dataset
-load(file = "./4. Outputs/RDS/FY23_cleanHRH.rds") # cleaned HRH dataset
-load(file = "./4. Outputs/RDS/HRH_ER_merged_21_23.rds") # HRH-ER merged dataset
+fin_data_orig <- read.delim("./1. Data/Financial_Structured_Datasets_COP17-24_20241115.txt") # read in FSD dataset
+load(file = "./4. Outputs/RDS/FY24_cleanHRH.rds") # cleaned HRH dataset
+load(file = "./4. Outputs/RDS/HRH_ER_merged_21_24.rds") # HRH-ER merged dataset
+
+
 OVC_mechs <- read_excel("./4. Outputs/FY23_OVC_mechs.xlsx")
 FY23_budget <- read_excel("./1. Data/Comprehensive_Budget_Datasets_COP17-23_20231114.xlsx")
 
