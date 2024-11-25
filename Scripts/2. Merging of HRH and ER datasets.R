@@ -17,27 +17,24 @@ library(readxl)
 library(writexl)
 
 ## 2.  Uploading files
-fin_data_orig <- read.delim("./1. Data/Financial_Structured_Datasets_COP17-23_20231215.txt") # read in FSD dataset
-load(file = "./4. Outputs/RDS/FY23_cleanHRH.rds") # cleaned HRH dataset
+fin_data_orig <- read.delim("./1. Data/Financial_Structured_Datasets_COP17-24_20241115.txt") # read in FSD dataset
+load(file = "./4. Outputs/RDS/FY24_cleanHRH.rds") # cleaned HRH dataset
 
-###---------- Identifying any GHSC or multilateral mechanisms to be removed form HRH and ER dataset --------------------------
-
-### REMEMBER THAT WE ARE KEEPING GHSC MECHS THIS YEAR!!!
+###---------- Identifying any UN multilateral mechanisms to be removed form HRH and ER dataset --------------------------
 
 # pull ER mech codes to be removed by keyword flag
 removedERmechs <- fin_data_orig %>%
-  mutate(keyword_flags = if_else(grepl("^GHSC", mech_name) == TRUE | 
-                                   grepl("UNAID", mech_name) == TRUE |
-                                   grepl("UNICEF", mech_name) == TRUE |
-                                   grepl("World Health Organization", mech_name) == TRUE |
-                                   grepl("U.N.", mech_name) == TRUE | 
-                                   grepl("United Nation", mech_name) == TRUE, "TRUE", "FALSE"))  %>%
+  mutate(keyword_flags = if_else(grepl("UNAID", mech_name) == TRUE |
+                                 grepl("UNICEF", mech_name) == TRUE |
+                                 grepl("World Health Organization", mech_name) == TRUE |
+                                 grepl("U.N.", mech_name) == TRUE | 
+                                 grepl("United Nation", mech_name) == TRUE, "TRUE", "FALSE"))  %>%
   filter(keyword_flags == "TRUE") %>%
   pull(mech_code)
 
 # pull HRH mech codes to be removed via keyword flag
 removedHRHmechs <- HRH_clean %>%
-  rename(keyword_flags = GHSC_UN_keywordflags) %>%
+  rename(keyword_flags = UN_keywordflags) %>%
   filter(keyword_flags == "TRUE") %>%
   pull(mech_code)
 
@@ -46,20 +43,24 @@ removedMechs <- c(removedERmechs, removedHRHmechs)
 removedMechs <- unique(removedMechs)
 
 ############################################ ER cleaning ##########################################################
-## 3. Filtering down to just 2021, 2022, and 2023
-fin_data2123 <- fin_data_orig %>% 
-  filter(implementation_year == 2021 | implementation_year == 2022 | implementation_year == 2023)    
-
+## 3. Filtering down to just 2021, 2022, 2023, and 2024
+fin_data2124 <- fin_data_orig %>% 
+  filter(implementation_year == 2021 | 
+         implementation_year == 2022 | 
+         implementation_year == 2023 | 
+         implementation_year == 2024
+         )    
 
 ## 4.Adding in a prime_or_sub column to match HRH dataset's prime_or_sub column
-fin_data2123 <- fin_data2123 %>%
+fin_data2124 <- fin_data2124 %>%
   mutate(ER_prime_or_sub = case_when(implementation_year == 2021 & cost_category == "Subrecipient" ~ "Sub",
                                      implementation_year == 2022 & subrecipient_name != "None" ~ "Sub",
                                      implementation_year == 2023 & subrecipient_name != "None" ~ "Sub",
+                                     implementation_year == 2024 & subrecipient_name != "None" ~ "Sub",
                                      TRUE ~ "Prime"))
 
 ## 5. Simplifying down dataset by summarizing them
-simple_findata <- fin_data2123 %>%                                       
+simple_findata <- fin_data2124 %>%                                       
   group_by(implementation_year,
            operatingunit, 
            country,
@@ -97,6 +98,12 @@ simple_findata <- simple_findata %>%
                                                                     sub_cost_category == "Contracted Health Care Workers- Clinical" |
                                                                     sub_cost_category == "Contracted Health Care Workers- Ancillary" |
                                                                     cost_category == "Fringe Benefits") ~ "Y",
+                                  implementation_year == 2024  & (sub_cost_category == "Salaries- Health Care Workers- Clinical" |
+                                                                    sub_cost_category == "Salaries- Health Care Workers- Ancillary" |
+                                                                    sub_cost_category == "Salaries- Other Staff" |
+                                                                    sub_cost_category == "Contracted Health Care Workers- Clinical" |
+                                                                    sub_cost_category == "Contracted Health Care Workers- Ancillary" |
+                                                                    cost_category == "Fringe Benefits") ~ "Y",
                                   TRUE ~ "N")) 
 
 
@@ -118,22 +125,21 @@ simple_findata <- simple_findata %>%
 simple_findata <- simple_findata %>%
   filter(!(ER_year == 2021 & ER_operatingunit == "South Africa")) 
 
-
 ## 9. Cleaning up the ER data: Simplifying funding agencies to be only USAID, CDC, or Other.
 simple_findata <- simple_findata %>% 
   mutate(ER_fundingagency = case_when((ER_fundingagency == "USAID") | (ER_fundingagency == "USAID/WCF") ~ "USAID",
                                       (ER_fundingagency == "HHS/CDC") ~ "CDC", 
                                       TRUE ~ "Other"))
 
-# EDIT: To add GHSC variable that can filter out GHSC/UN mechs when needed
+# EDIT: To add the UN variable that can filter out UN mechanisms when needed
 simple_findata <- simple_findata %>%
-  mutate(GHSC_UN_keywordflags = if_else(ER_mech_code %in% removedMechs, "TRUE", "FALSE")) 
+  mutate(UN_keywordflags = if_else(ER_mech_code %in% removedMechs, "TRUE", "FALSE")) 
 
 
 ############################################ HRH cleaning ##########################################################
 
 ## 10. Set NA values to zero for annual fringe or annual expenditure since we can likely assume that their real value is zero
-HRH_data2123 <- HRH_clean %>%
+HRH_data2124 <- HRH_clean %>%
   mutate(annual_expenditure = if_else(is.na(annual_expenditure) == TRUE, 0, annual_expenditure),
          annual_fringe = if_else(is.na(annual_fringe) == TRUE, 0, annual_fringe),
          
@@ -143,7 +149,7 @@ HRH_data2123 <- HRH_clean %>%
 ## 11. Pivoting the HRH dataset so that the three columns of "annual expenditure", "annual fringe", and "nonmonetary_costs" are put into a single column called "HRH_expenditure_amt"
 ##     This needs to be done to match the structure of the ER dataset so the two can properly merge
 
-HRH_data2123 <- HRH_data2123 %>% #sort columns first so that the three columns of interest are next to each other
+HRH_data2124 <- HRH_data2124 %>% #sort columns first so that the three columns of interest are next to each other
   select(1:fiscal_year,
          annual_expenditure,
          annual_fringe,
@@ -151,9 +157,8 @@ HRH_data2123 <- HRH_data2123 %>% #sort columns first so that the three columns o
          actual_annual_spend:ncol(HRH_clean)) %>%
   pivot_longer(cols=annual_expenditure:actual_non_monetary_expenditure, names_to='salary_or_fringe', values_to = 'HRH_expenditure_amt')
 
-
 ## 12. Creating a sub_cost_category to match the ER dataset's sub_cost_category. This logic is based on Sarah's Tableau Prep code from 2021. 
-HRH_data2123 <- HRH_data2123 %>% 
+HRH_data2124 <- HRH_data2124 %>% 
   mutate(sub_cost_category = case_when((prime_or_sub == "Prime") & (salary_or_fringe == "annual_fringe") ~ "Fringe Benefits",
                                        (prime_or_sub == "Sub") ~ "Subrecipient",
                                        (prime_or_sub == "Prime") & (mode_of_hiring == "Salary") & (er_category == "HCW: Clinical") ~ "Salaries- Health Care Workers- Clinical",
@@ -165,7 +170,7 @@ HRH_data2123 <- HRH_data2123 %>%
                                        (prime_or_sub == "Prime") & (mode_of_hiring == "Non-Monetary ONLY") ~ "Non-monetary only*"))
 
 ## 13. Create a cost_category to help match ER dataset structure. This is based on ER's current classification system 
-HRH_data2123 <- HRH_data2123 %>%
+HRH_data2124 <- HRH_data2124 %>%
   mutate(cost_category = case_when(sub_cost_category == "Salaries- Health Care Workers- Clinical" | sub_cost_category == "Salaries- Health Care Workers- Ancillary" | sub_cost_category == "Salaries- Other Staff" ~ "Personnel",
                                    sub_cost_category == "Contracted Health Care Workers- Clinical" | sub_cost_category == "Contracted Health Care Workers- Ancillary" | sub_cost_category == "Contracted- Other Staff*" ~ "Contractual",
                                    sub_cost_category == "Non-monetary only*" ~ "Non-monetary only",
@@ -173,7 +178,7 @@ HRH_data2123 <- HRH_data2123 %>%
                                    sub_cost_category == "Subrecipient" ~ "Subrecipient"))
 
 ## 14. Aggregate columns using the grouped variables we're interested in
-simple_hrhdata <- HRH_data2123 %>%
+simple_hrhdata <- HRH_data2124 %>%
   group_by(fiscal_year,
            operating_unit, 
            country,
@@ -198,7 +203,7 @@ simple_hrhdata <- simple_hrhdata %>%
 
 # Create keyword flags from HRH dataset
 simple_hrhdata <- simple_hrhdata %>%
-  mutate(HRH_GHSC_UN_keywordflags = if_else(mech_code %in% removedMechs, "TRUE", "FALSE")) 
+  mutate(HRH_UN_keywordflags = if_else(mech_code %in% removedMechs, "TRUE", "FALSE")) 
 
 
 ############################################ Merging the ER and HRH datasets ##########################################################
@@ -214,7 +219,7 @@ HRH_ER_merged <- full_join(simple_findata, simple_hrhdata, by = c("ER_year" = "f
                                                                   "ER_mech_code" = "mech_code",
                                                                   "ER_mech_name" = "mech_name",
                                                                   "ER_cost_category" = "cost_category",
-                                                                  "GHSC_UN_keywordflags" = "HRH_GHSC_UN_keywordflags",
+                                                                  "UN_keywordflags" = "HRH_UN_keywordflags",
                                                                   "ER_sub_cost_category" = "sub_cost_category"))
 
 
@@ -232,14 +237,14 @@ HRH_ER_merged <- HRH_ER_merged %>%
          cost_category = ER_cost_category,
          sub_cost_category = ER_sub_cost_category) 
 
-
 ########################################### Determining missing HRH mechanisms ########################################################
 
 ## 18. Create a summary table that shows the total sum of HRH expenditures and the total sum of ER expenditures for each mech code
 missing_mechs <- HRH_ER_merged %>%
-  group_by(year, mech_code) %>%
+  group_by(year, operating_unit, country, mech_code) %>%
   summarise(HRH_expenditure_amt = sum(HRH_expenditure_amt, na.rm = T), 
-            ER_expenditure_amt = sum(ER_expenditure_amt[HRH_relevant == "Y"], na.rm = T)) # NOTE: SUMMING ER STAFFING EXPENDITURES ONLY
+            ER_expenditure_amt = sum(ER_expenditure_amt[HRH_relevant == "Y"], na.rm = T)) %>% # NOTE: SUMMING ER STAFFING EXPENDITURES ONLY
+  ungroup()
 
 ## 19. Now create a column that records down the mech codes where ER expenditure is positive and when HRH expenditure is zero.
 missing_mechs <- missing_mechs %>%
@@ -256,7 +261,7 @@ missing_mechs <- missing_mechs %>%
   select(-ER_expenditure_amt, -HRH_expenditure_amt)
 
 ## 20. Now, merge this list of missing HRH mechanisms into the joined_data dataframe using a left join
-finalMerge <- left_join(HRH_ER_merged, missing_mechs, by = c("year", "mech_code"))
+finalMerge <- left_join(HRH_ER_merged, missing_mechs, by = c("year", "operating_unit", "country", "mech_code"))
 
 ## 21. Re-sort the columns for better readability
 finalMerge <- finalMerge %>%
@@ -272,7 +277,7 @@ finalMerge <- finalMerge %>%
          cost_category, 
          sub_cost_category, 
          HRH_relevant, 
-         GHSC_UN_keywordflags,
+         UN_keywordflags,
          missingMechanisms_fromHRH, 
          ER_expenditure_amt, 
          HRH_expenditure_amt)
@@ -285,8 +290,8 @@ yearCheck <- finalMerge %>%
 
 ########################################### Exporting merged dataset ##########################################################
 
-write.csv(finalMerge, "./4. Outputs/HRH_ER_merged_21_23.csv", row.names=FALSE)
-save(finalMerge, file = "./4. Outputs/RDS/HRH_ER_merged_21_23.rds")
+write.csv(finalMerge, "./4. Outputs/HRH_ER_merged_21_24.csv", row.names=FALSE)
+save(finalMerge, file = "./4. Outputs/RDS/HRH_ER_merged_21_24.rds")
 
 
 
