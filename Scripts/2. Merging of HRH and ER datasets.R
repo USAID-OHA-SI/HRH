@@ -283,7 +283,7 @@ finalMerge <- finalMerge %>%
          HRH_expenditure_amt)
 
 ## Check the totals to make sure that they make sense
-yearCheck <- finalMerge %>%
+yearCheck <- finalMerge %>% 
   group_by(year) %>%
   summarise(ER_expenditure_amt = sum(ER_expenditure_amt, na.rm = T),
             HRH_expenditure_amt = sum(HRH_expenditure_amt, na.rm = T))
@@ -293,7 +293,6 @@ yearCheck <- finalMerge %>%
 write.csv(finalMerge, "./4. Outputs/HRH_ER_merged_21_24.csv", row.names=FALSE)
 save(finalMerge, file = "./4. Outputs/RDS/HRH_ER_merged_21_24.rds")
 
-
-
+#### NOTE: MAKE SURE TO CHANGE DATA TYPE FROM NUMBER(WHOLE) TO NUMBER(DECIMAL) IN TABLEAU DASHBOARD
 
 

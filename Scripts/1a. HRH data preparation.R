@@ -86,6 +86,6 @@ save(HRH_clean, file = "./4. Outputs/RDS/FY24_cleanHRH.rds")
 ## 4. Export as csv
 write.csv(HRH_clean, "./1. Data/HRH_Structured_Datasets_Site_IM_FY21-24_not_redacted_20241115_CLEAN.csv", row.names=FALSE)
 
-
+#### NOTE: MAKE SURE TO CHANGE DATA TYPE FROM NUMBER(WHOLE) TO NUMBER(DECIMAL) IN TABLEAU DASHBOARD
 
 

@@ -22,8 +22,6 @@ options(dplyr.summarise.inform = FALSE)
 fin_data_orig <- read.delim("./1. Data/Financial_Structured_Datasets_COP17-24_20241115.txt") # read in FSD dataset
 load(file = "./4. Outputs/RDS/FY24_cleanHRH.rds") # cleaned HRH dataset
 load(file = "./4. Outputs/RDS/HRH_ER_merged_21_24.rds") # HRH-ER merged dataset
-OVC_mechs <- read_excel("./4. Outputs/FY24_OVC_mechs.xlsx")
-FY24_budget <- read.delim("./1. Data/Comprehensive_Budget_Datasets_COP17-24_20241115.txt", header = TRUE, stringsAsFactors = FALSE)
 
 ### EDIT: Load the G2Gs list
 G2Gs <- read_excel("./1. Data/FY24 PEPFAR G2G Mechanisms.xlsx")
@@ -218,36 +216,17 @@ overallList = list()
 topLevelList = list()
 totalCountList = list()
 otherList = list()
-dreamsList = list() 
-ovcList = list()
 G2GsList = list()
 
 for (i in 1:length(OU_list)) {
   
   OU <- OU_list[i] # loop through each OU in the OU list
   
-  # Clean up the OVC mechs 
-  OVC_mechs_OU <- OVC_mechs %>%
-    filter(funding_agency == "USAID",
-           operatingunit == OU) %>%
-    select(mech_code) %>%
-    pull(mech_code)
-  
-  # Clean up the DREAMS mechs
-  DREAMS_mechs_OU <- FY24_budget %>%
-    filter(implementation_year == 2024,
-           fundingagency == "USAID" | fundingagency == "USAID/WCF",
-           operatingunit == OU,
-           initiative_name == "DREAMS",
-           record_type == "Implementing Mechanism",
-           cop_budget_total > 0) %>%
-    distinct(mech_code) %>%
-    pull(mech_code)
-  
   # Top level summary by Prime/Sub
   topLevel <- HRH_ER_merged %>%
     filter(year == max(year)) %>%
     filter(operating_unit == OU) %>%
+    filter(mech_code %in% G2G_mechs) %>%
     group_by(year, operating_unit, country, mech_code, mech_name, prime_partner_name,  prime_or_sub) %>%
     summarise(ER_expenditure_amt = sum(ER_expenditure_amt[HRH_relevant == "Y"], na.rm = T),
               HRH_expenditure_amt = sum(HRH_expenditure_amt, na.rm = T)) %>%
@@ -261,6 +240,7 @@ for (i in 1:length(OU_list)) {
   totalCount <- HRH_ER_merged %>%
     filter(year == max(year)) %>%
     filter(operating_unit == OU) %>%
+    filter(mech_code %in% G2G_mechs) %>%
     group_by(operating_unit, country, year, mech_code, mech_name, prime_partner_name) %>%
     summarise(reported_in_ER = sum(ER_expenditure_amt, na.rm = T),
               reported_in_HRH = sum(HRH_expenditure_amt, na.rm = T)) %>%
@@ -275,6 +255,7 @@ for (i in 1:length(OU_list)) {
   Breakdown_other <- HRH_data_orig %>%
     filter(fiscal_year == max(fiscal_year),
            operating_unit == OU) %>%
+    filter(mech_code %in% G2G_mechs) %>%
     group_by(fiscal_year, operating_unit, country, mech_code, mech_name, prime_partner_name) %>%
     summarise(total_num_staff = n(),
               total_other_staff = sum(employment_title == "Other Program Management Staff" |
@@ -298,25 +279,6 @@ for (i in 1:length(OU_list)) {
   
   Breakdown_other <- left_join(Breakdown_other, otherPull, by = c("fiscal_year", "operating_unit", "country", "mech_code", "mech_name", "prime_partner_name")) %>%
     mutate(action_item = if_else(pct_ofTotal > 20, "Over 20% of employment titles were reported under the `other` categories. Please review the employment titles identified in column I and determine if a more specific employment title can better reflect their roles/responsibilities", ""))
-  
-  # OVC Check: Filter the HRH dataset for all OVC mechs that had OVC_serv > 1, then summarize total staff with beneficiary = OVC
-  OVC_check <- HRH_data_orig %>%
-    filter(fiscal_year == max(fiscal_year),
-           operating_unit == OU,
-           mech_code %in% OVC_mechs_OU) %>%
-    group_by(fiscal_year, operating_unit, country, mech_code, mech_name, prime_partner_name) %>%
-    summarise(total_OVC_staff = length(individual_count[targeted_beneficiary == "OVC"])) %>%
-    mutate(action_item = if_else(total_OVC_staff == 0, "No OVC staff was reported for this mechanism, but our records indicate this mechanism has OVC_SERV targets. Please review and ensure that the beneficiary column for OVC staff is accurate", ""))
-  
-  # DREAMS Check: Filter the HRH dataset for DREAMS related mech names, and then summarize total staff with DREAMS keyword search in Comments column
-  DREAMS_check <- HRH_data_orig %>%
-    filter(fiscal_year == max(fiscal_year),
-           operating_unit == OU,
-           mech_code %in% DREAMS_mechs_OU) %>%
-    mutate(DREAMS_staff_primarily = if_else(is_dreams_primarily == "Yes", "TRUE", "FALSE")) %>%
-    group_by(fiscal_year, operating_unit, country, mech_code, mech_name, prime_partner_name) %>%
-    summarise(total_DREAMS_staff = length(individual_count[DREAMS_staff_primarily == "TRUE"])) %>%
-    mutate(action_item = if_else(total_DREAMS_staff == 0, "No DREAMS staff was reported for this mechanism, but records indicate this mechanism received some budget for DREAMS. Please review and ensure that the `Primarily supports DREAMS programming` column for all DREAMS staff is accurate", ""))
   
   ########## EDIT: G2Gs check ################
   G2Gs_check <- HRH_data_orig %>%
@@ -362,70 +324,11 @@ for (i in 1:length(OU_list)) {
     filter(action_item != "") %>%
     pull(mech_code)
   
-  overall_OVC <- OVC_check %>% # OVC mechs errors
-    filter(action_item != "") %>%
-    pull(mech_code)
-  
-  overall_DREAMS <- DREAMS_check %>% # DREAMS mechs errors
-    filter(action_item != "") %>%
-    pull(mech_code)
   
   ####### EDIT: G2Gs check ########
   overall_G2Gs <- G2Gs_check %>%
     filter(action_item != "") %>%
     pull(mech_code)
-  
-  # Build the overall summary table that outlines how many data quality flags were triggered for each mechanism
-  
-  overall_wide <- HRH_ER_merged %>%
-    filter(year == max(year),
-           operating_unit == OU) %>%
-    distinct(year, operating_unit, country, mech_code, mech_name, prime_partner_name) %>%
-    mutate(`Report was submitted for ER, but NOT for HRH` = if_else(mech_code %in% overall_missingHRH, "Yes", "No"),
-           `HRH staffing expenditure (prime + sub) is different by > 15% of staffing expenditure reported to ER` = if_else(mech_code %in% overall_primeSub, "Yes", "No"),
-           `PRIME staffing expenditure is different by > 15% of PRIME staffing expenditure reported to ER` = if_else(mech_code %in% overall_prime, "Yes", "No"),
-           `SUB staffing expenditure is different by > 15% of SUB staffing expenditure reported to ER` = if_else(mech_code %in% overall_sub, "Yes", "No"),
-           `Staff reported under 'other' employment titles is > 20% of total staff` = if_else(mech_code %in% overall_other, "Yes", "No"),
-           `No staff reported with OVC beneficiaries, even though this mechanism has OVC program targets` = if_else(mech_code %in% overall_OVC, "Yes", "No"),
-           `No staff reported under DREAMS, even though this mechanism has a DREAMS-related budget` = if_else(mech_code %in% overall_DREAMS, "Yes", "No"),
-           
-           ### EDIT: G2Gs check
-           `No staff reported as seconded staff, even though this mechanism is a G2G mechanism` = if_else(mech_code %in% overall_G2Gs, "Yes", "No")) %>%
-    
-    arrange(mech_code) 
-  
-  # Also build the overall summary table in long format
-  overall_long <- overall_wide %>%
-    gather(key = dataQuality_flag, value = Yes_or_No, 7:ncol(overall_wide)) %>%
-    arrange(mech_code) %>%
-    mutate(action_items = case_when(dataQuality_flag == "Report was submitted for ER, but NOT for HRH" & Yes_or_No == "Yes" ~ "ER staffing expenditures were reported, but HRH expenditures were NOT reported. Please ensure HRH report is completed, uploaded, and submitted in DATIM",
-                                    dataQuality_flag == "HRH staffing expenditure (prime + sub) is different by > 15% of staffing expenditure reported to ER" & Yes_or_No == "Yes" ~ "Total HRH expenditures were different from total ER staffing expenditures by at least 15%. Please review for closer alignment",
-                                    dataQuality_flag == "PRIME staffing expenditure is different by > 15% of PRIME staffing expenditure reported to ER" & Yes_or_No == "Yes" ~ "Prime HRH expenditures were different from Prime ER staffing expenditures by at least 15%. Please review for closer alignment",
-                                    dataQuality_flag == "SUB staffing expenditure is different by > 15% of SUB staffing expenditure reported to ER" & Yes_or_No == "Yes" ~ "Sub HRH expenditures were different from Sub ER staffing expenditures by at least 15%. Please review for closer alignment",
-                                    dataQuality_flag == "Staff reported under 'other' employment titles is > 20% of total staff" & Yes_or_No == "Yes" ~ "Over 20% of employment titles were reported under `other` categories. Please review all 'other' employment titles that were submitted, and determine whether a more specific employment title will better reflect their roles/responsibilities",
-                                    dataQuality_flag == "No staff reported with OVC beneficiaries, even though this mechanism has OVC program targets" & Yes_or_No == "Yes" ~ "No OVC staff was reported for this mechanism, but our records indicate this mechanism has OVC_SERV targets. Please review and ensure that the beneficiary column for OVC staff is accurate",
-                                    dataQuality_flag == "No staff reported under DREAMS, even though this mechanism has a DREAMS-related budget" & Yes_or_No == "Yes" ~ "No DREAMS staff was reported for this mechanism, but records indicate this mechanism received some budget for DREAMS. Please review and ensure that the `Primarily supports DREAMS programming` column for all DREAMS staff is accurate",
-                                    
-                                    #### EDIT: G2Gs check
-                                    dataQuality_flag == "No staff reported as seconded staff, even though this mechanism is a G2G mechanism" & Yes_or_No == "Yes" ~ "No seconded staff were reported for this mechanism, but we expect some seconded staff here because this is a Government-to-Government (G2G) mechanism. Please review and ensure that all seconded staff are reported accurately for this G2G mechanism",
-                                    
-                                    TRUE ~ "")) %>%
-    select(year, operating_unit, country, mech_code, mech_name, prime_partner_name, dataQuality_flag, Yes_or_No, action_items)
-  
-  # Add a note on what we consider under "other" employment title if flagged
-  overall_long <- overall_long %>%
-    mutate(Notes = if_else(dataQuality_flag == "Staff reported under 'other' employment titles is > 20% of total staff" & Yes_or_No == "Yes", "Note: `other` employment titles include: Other Program Management Staff, Other Professional Staff, Other supportive staff not listed, Other community-based cadre, and Other clinical provider not listed", ""))
-  
-  # Filter for only mech_codes with data flags 
-  toKeep <- overall_long %>%
-    filter(Yes_or_No == "Yes") %>%
-    distinct(mech_code, .keep_all = TRUE) %>%
-    pull(mech_code)
-  
-  overall_long <- overall_long %>%
-    filter(mech_code %in% toKeep) %>%
-    filter(Yes_or_No == "Yes") %>%
-    select(-Yes_or_No)
   
   ### EDIT: filter for only rows with action items
   topLevel <- topLevel %>% filter(mech_code %in% topLevel2) %>%
@@ -435,68 +338,52 @@ for (i in 1:length(OU_list)) {
   totalCount <- totalCount %>% filter(mech_code %in% overall_missingHRH) 
   Breakdown_other <- Breakdown_other %>% filter(mech_code %in% overall_other) %>%
     select(-total_num_staff, -pct_ofTotal) 
-  OVC_check <- OVC_check %>% filter(mech_code %in% overall_OVC) 
-  DREAMS_check <- DREAMS_check %>% filter(mech_code %in% overall_DREAMS) 
-  
+
   ######## EDIT: G2Gs check #######
   G2Gs_check <- G2Gs_check %>% filter(mech_code %in% overall_G2Gs)
   
   ## Now load each iteration into each  long list
-  overallList[[i]] = overall_long
   topLevelList[[i]] <- topLevel
   totalCountList[[i]] <- totalCount
   otherList[[i]] <- Breakdown_other
-  dreamsList[[i]] <- DREAMS_check
-  ovcList[[i]] <- OVC_check
   G2GsList[[i]] <- G2Gs_check
   
 }
 
 ## Now bind the rows together in each list
-overall_long = do.call(rbind, overallList)
 topLevel = do.call(rbind, topLevelList)
 totalCount = do.call(rbind, totalCountList)
 Breakdown_other = do.call(rbind, otherList)
-DREAMS_check = do.call(rbind, dreamsList)
-OVC_check = do.call(rbind, ovcList)
 G2Gs_check = do.call(rbind, G2GsList)
 
 # arrange by country and mech code
-overall_long <- overall_long %>% arrange(country, mech_code) 
 topLevel <- topLevel %>% arrange(country, mech_code) 
 totalCount <- totalCount %>% arrange(country, mech_code) 
 Breakdown_other <- Breakdown_other %>% arrange(country, mech_code) 
-DREAMS_check <- DREAMS_check %>% arrange(country, mech_code) 
-OVC_check <- OVC_check %>% arrange(country, mech_code) 
 G2Gs_check <- G2Gs_check %>% arrange(country, mech_code)
 
 
 ## --------------- Load each data frame into the Excel templates---------------
 
 # Import the excel reporting template to be used
-wb <- loadWorkbook("./1. Data/HRH_QC_Reporting_Template_20231118_vF - Global.xlsx")
+wb <- loadWorkbook("./1. Data/HRH_QC_Reporting_Template_20231118_vF - G2Gs.xlsx")
 
 # Set workbook title
-wbTitle <- paste0("FY24 HRH Data Quality Checks - All Countries - Global Summary") 
+wbTitle <- paste0("FY24 HRH Data Quality Checks - All Countries - G2G mechs only") 
 
 # Load the data frames into each Excel sheet as needed
 writeData(wb, sheet = 1, wbTitle, startCol = 2, startRow = 3, colNames = FALSE)
-writeData(wb, sheet = 2, overall_long, startCol = 2, startRow = 4, colNames = FALSE)
-writeData(wb, sheet = 3, totalCount, startCol = 2, startRow = 4, colNames = FALSE)
-writeData(wb, sheet = 4, topLevel, startCol = 2, startRow = 4, colNames = FALSE)
-writeData(wb, sheet = 5, Breakdown_other, startCol = 2, startRow = 4, colNames = FALSE)
-writeData(wb, sheet = 6, OVC_check, startCol = 2, startRow = 4, colNames = FALSE)
-writeData(wb, sheet = 7, DREAMS_check, startCol = 2, startRow = 4, colNames = FALSE)
-writeData(wb, sheet = 8, G2Gs_check, startCol = 2, startRow = 4, colNames = FALSE)
+writeData(wb, sheet = 2, totalCount, startCol = 2, startRow = 4, colNames = FALSE)
+writeData(wb, sheet = 3, G2Gs_check, startCol = 2, startRow = 4, colNames = FALSE)
 
 # Establish the workbook name based on the OU
-wbName <- paste0("./4. Outputs/QC Reports/Global level/FY24 HRH Data Quality Checks - Global Summary.xlsx")
+wbName <- paste0("./4. Outputs/QC Reports/G2Gs only/FY24 HRH Data Quality Checks - G2Gs only.xlsx")
 
 # Export each QC report in Excel
 saveWorkbook(wb, wbName, overwrite = TRUE) 
 
 # print progress
-print(paste0("Global Consolidated workbook complete"))
+print(paste0("G2Gs Consolidated workbook complete"))
 
 
  

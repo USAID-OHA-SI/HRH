@@ -246,7 +246,6 @@ for (i in 1:length(OU_list)) {
   topLevel$pct_difference_fromER[is.nan(topLevel$pct_difference_fromER)] <- NA # convert NaN's to NA 
   topLevel$pct_difference_fromER <- ifelse(is.infinite(topLevel$pct_difference_fromER), 100, topLevel$pct_difference_fromER) # set infinite values to 100
   
-  
   # Review count of ER and HRH submissions 
   totalCount <- HRH_ER_merged %>%
     filter(year == max(year)) %>%
