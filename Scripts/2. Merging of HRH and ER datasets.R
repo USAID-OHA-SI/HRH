@@ -24,7 +24,8 @@ load(file = "./4. Outputs/RDS/FY24_cleanHRH.rds") # cleaned HRH dataset
 
 # pull ER mech codes to be removed by keyword flag
 removedERmechs <- fin_data_orig %>%
-  mutate(keyword_flags = if_else(grepl("UNAID", mech_name) == TRUE |
+  mutate(keyword_flags = if_else(grepl("^GHSC-", mech_name) == TRUE |
+                                 grepl("UNAID", mech_name) == TRUE |
                                  grepl("UNICEF", mech_name) == TRUE |
                                  grepl("World Health Organization", mech_name) == TRUE |
                                  grepl("U.N.", mech_name) == TRUE | 
@@ -243,7 +244,7 @@ HRH_ER_merged <- HRH_ER_merged %>%
 missing_mechs <- HRH_ER_merged %>%
   group_by(year, operating_unit, country, mech_code) %>%
   summarise(HRH_expenditure_amt = sum(HRH_expenditure_amt, na.rm = T), 
-            ER_expenditure_amt = sum(ER_expenditure_amt[HRH_relevant == "Y"], na.rm = T)) %>% # NOTE: SUMMING ER STAFFING EXPENDITURES ONLY
+            ER_expenditure_amt = sum(ER_expenditure_amt[HRH_relevant == "Y" | sub_cost_category == "Other Contracts" | sub_cost_category == "Contracted Interventions"], na.rm = T)) %>% # NOTE: SUMMING ER STAFFING EXPENDITURES ONLY
   ungroup()
 
 ## 19. Now create a column that records down the mech codes where ER expenditure is positive and when HRH expenditure is zero.

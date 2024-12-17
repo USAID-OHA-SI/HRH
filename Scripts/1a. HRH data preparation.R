@@ -59,7 +59,8 @@ HRH_clean <- HRH_clean %>%
 
 # Add a keyword flag if staff belong to UN-related mechanisms (due to reporting discrepancies)
 HRH_clean <- HRH_clean %>%
-  mutate(UN_keywordflags = if_else(grepl("UNAID", mech_name) == TRUE |
+  mutate(UN_keywordflags = if_else(grepl("^GHSC-", mech_name) == TRUE |
+                                        grepl("UNAID", mech_name) == TRUE |
                                         grepl("UNICEF", mech_name) == TRUE |
                                         grepl("World Health Organization", mech_name) == TRUE |
                                         grepl("U.N.", mech_name) == TRUE | 
@@ -89,3 +90,62 @@ write.csv(HRH_clean, "./1. Data/HRH_Structured_Datasets_Site_IM_FY21-24_not_reda
 #### NOTE: MAKE SURE TO CHANGE DATA TYPE FROM NUMBER(WHOLE) TO NUMBER(DECIMAL) IN TABLEAU DASHBOARD
 
 
+
+###------------------ ALSO PREPARE ANY EXTERNAL DATASETS WE MAY NEED------------------####
+
+
+
+#Import 2024 MER targets
+load(file = "./4. Outputs/RDS/FY24_rawMER.rds")
+
+## 3. Do some data cleaning
+cleanMER <- rawMER %>%
+  
+  # Filter for only the relevant years
+  filter(fiscal_year == 2024) %>%
+  
+  # Only select relevant indicators for now
+  filter(grepl("^OVC", indicator) | grepl("^KP", indicator)) %>%
+  
+  # Select only the relevant columns
+  select(-operatingunituid, -snu1uid, -psnuuid, - snuprioritization, -typemilitary, prime_partner_duns, -prime_partner_uei,
+         -award_number, -otherdisaggregate, -otherdisaggregate_sub, -statustb, -statuscx, -hiv_treatment_status,
+         -starts_with("qtr"), -source_name) %>% 
+  
+  # Filter for only relevant disaggregates
+  filter(standardizeddisaggregate == "Total Numerator")
+
+## Disaggregate further
+cleanMER <- cleanMER %>%
+  group_by(fiscal_year, operatingunit, country, snu1, psnu, prime_partner_name, funding_agency, mech_code, mech_name, indicator, standardizeddisaggregate, dreams) %>%
+  summarise(cumulative = sum(cumulative, na.rm = TRUE),
+            targets = sum(targets, na.rm = TRUE))
+
+# Set all MER indicator columns as numeric
+cleanMER[, grepl("^OVC", names(cleanMER))] <- lapply(cleanMER[, grepl("^OVC", names(cleanMER))], as.numeric)
+cleanMER[, grepl("^KP", names(cleanMER))] <- lapply(cleanMER[, grepl("^KP", names(cleanMER))], as.numeric)
+
+# Filter for OVC only where OVC_SERV > 0 
+ovcMER <- cleanMER %>%
+  filter(indicator == "OVC_SERV",
+         dreams == "N", # Now updated to remove mechanisms that report OVC_SERV under DREAMS
+         targets > 0)
+
+# Filter for KP targets
+KPmer <- cleanMER %>%
+  filter(indicator == "KP_PREV" |
+           indicator == "KP_MAT")
+
+# Create a summary list of mech codes with OVC_SERV > 0 
+OVC_mechs <- ovcMER %>%
+  group_by(fiscal_year, funding_agency, indicator, operatingunit, country, prime_partner_name, mech_code, mech_name) %>%
+  tally()
+
+# Create a summary list of mech codes with KP targets
+KP_mechs <- KPmer %>%
+  group_by(fiscal_year, funding_agency, indicator, operatingunit, country, prime_partner_name, mech_code, mech_name) %>%
+  tally()
+
+#Export the files
+write_xlsx(OVC_mechs,"./4. Outputs/FY24_OVC_mechs.xlsx") 
+write_xlsx(KP_mechs,"./4. Outputs/FY24_KP_mechs.xlsx") 
