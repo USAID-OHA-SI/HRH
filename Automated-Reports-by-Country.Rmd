@@ -8,7 +8,7 @@ date: "`r format(Sys.time(), '%d %B, %Y')`"
 
 params: 
     set_title: "My Title!"
-    operating_unit: !r c("Tanzania")
+    operating_unit: !r c("Lesotho")
     fiscal_year: "FY24"
 ---
 
@@ -53,13 +53,10 @@ Missions should use these briefers to review their staffing investments and tren
 ```{r}
 
 # Load the FSD, HRH, and merged FSD-HRH dataset
-fin_data_orig <- read.delim("./1. Data/Financial_Structured_Datasets_COP17-23_20231215.txt") # FSD
-load(file = "./4. Outputs/RDS/FY23_cleanHRH.rds") # HRH
-load(file = "./4. Outputs/RDS/HRH_ER_merged_21_23.rds") # FSD-HRH 
+fin_data_orig <- read.delim("./1. Data/Financial_Structured_Datasets_COP17-24_20241115.txt") # read in FSD dataset
+load(file = "./4. Outputs/RDS/FY24_cleanHRH.rds") # cleaned HRH dataset
+load(file = "./4. Outputs/RDS/HRH_ER_merged_21_24.rds") # HRH-ER merged dataset
 
-# Some data cleaning for rows to be removed
-HRH_clean <- HRH_clean %>%
-  filter(!program == "Error")
 
 ```
 
@@ -72,8 +69,8 @@ The total staffing expenditure reported in HRH and ER by USAID, CDC, and other a
 
 # Create summary df to be used for table output
 mech_submissions <- finalMerge %>%
-  filter(year == 2023) %>%
-  filter(GHSC_UN_keywordflags == "FALSE") %>% # excluding all GHSC and UN mechanisms
+  filter(year == 2024) %>%
+  filter(UN_keywordflags == "FALSE") %>% # excluding all GHSC and UN mechanisms
   filter(operating_unit == params$operating_unit) %>%
   group_by(year, operating_unit, funding_agency, mech_code) %>%
   summarise(HRH_expenditure_amt = sum(HRH_expenditure_amt, na.rm = T), 
@@ -112,7 +109,7 @@ This provides a summary of USAID’s staffing size relative to the overall PEPFA
 
 # Create the first df that summarizes PEPFAR
 infographic_PEPFAR <- HRH_clean %>%
-  filter(fiscal_year == 2023) %>%
+  filter(fiscal_year == 2024) %>%
   filter(operating_unit == params$operating_unit) %>%
   mutate(funding_agency = "PEPFAR") %>%
   group_by(funding_agency) %>%
@@ -124,7 +121,7 @@ infographic_PEPFAR <- HRH_clean %>%
 
 # Calculate the % spent towards staffing
 PEPFAR_pct_HRH <- finalMerge %>%
-  filter(year == 2023) %>%
+  filter(year == 2024) %>%
   filter(operating_unit == params$operating_unit) %>%
   group_by(year, operating_unit) %>%
   summarise(HRH_expenditure_amt = sum(HRH_expenditure_amt, na.rm = T),
@@ -140,7 +137,7 @@ infographic_PEPFAR <- infographic_PEPFAR %>%
 
 # Now, create the second df that summarizes USAID only
 infographic_USAID <- HRH_clean %>%
-  filter(fiscal_year == 2023) %>%
+  filter(fiscal_year == 2024) %>%
   filter(operating_unit == params$operating_unit) %>%
   filter(funding_agency == "USAID") %>%
   group_by(funding_agency) %>%
@@ -152,7 +149,7 @@ infographic_USAID <- HRH_clean %>%
 
 # Calculate the % spent towards staffing for USAID
 USAID_pct_HRH <- finalMerge %>%
-  filter(year == 2023) %>%
+  filter(year == 2024) %>%
   filter(operating_unit == params$operating_unit) %>%
   filter(funding_agency == "USAID") %>%
   group_by(year, operating_unit) %>%
@@ -193,7 +190,7 @@ Breakdown of HRH expenditure and number of individual staff supported by USAID, 
 
 # First, create a df that shows HRH expenditure and individual count by program area
 patchwork <- HRH_clean %>%
-  filter(fiscal_year == 2023) %>%
+  filter(fiscal_year == 2024) %>%
   filter(operating_unit == params$operating_unit) %>%
   select(fiscal_year, funding_agency, actual_annual_spend, individual_count) %>%
   group_by(funding_agency) %>%
@@ -272,7 +269,7 @@ With this in mind, we typically see higher Program Management (PM) and Above Ser
 
 # Create a df that shows HRH expenditure and individual count by program area
 patchwork <- HRH_clean %>%
-  filter(fiscal_year == 2023) %>%
+  filter(fiscal_year == 2024) %>%
   filter(funding_agency == "USAID") %>%
   filter(operating_unit == params$operating_unit) %>%
   select(fiscal_year, funding_agency, program, actual_annual_spend, individual_count) %>%
@@ -368,7 +365,7 @@ This shows the top 5 employment titles supported by PEPFAR USAID based on indivi
 
 # Create a df that shows individual count by the top 10 employment title
 patchwork <- HRH_clean %>%
-  filter(fiscal_year == 2023) %>%
+  filter(fiscal_year == 2024) %>%
   filter(funding_agency == "USAID") %>%
   filter(operating_unit == params$operating_unit) %>%
   select(fiscal_year, funding_agency, employment_title, actual_annual_spend, individual_count) %>%
@@ -457,7 +454,7 @@ This shows the top 5 employment titles supported by PEPFAR USAID based on HRH ex
 
 # Create a df that shows HRH expenditure by the top 5 employment title
 patchwork <- HRH_clean %>%
-  filter(fiscal_year == 2023) %>%
+  filter(fiscal_year == 2024) %>%
   filter(funding_agency == "USAID") %>%
   filter(operating_unit == params$operating_unit) %>%
   select(fiscal_year, funding_agency, employment_title, actual_annual_spend, individual_count) %>%
@@ -546,7 +543,7 @@ This scatter plot shows the median annual remuneration (i.e. estimated annual sa
 
 # Prepare the remuneration df to be used
 remuneration <- HRH_clean %>%
-  filter(fiscal_year == 2023) %>%
+  filter(fiscal_year == 2024) %>%
   filter(funding_agency == "USAID") %>%
   filter(operating_unit == params$operating_unit) %>%
   select(employment_title, equivalent_annual_salary)
@@ -629,7 +626,7 @@ This shows how much of USAID’s HRH expenditure is channeled through prime loca
 
 # Create the summary df for local partners
 local_partner <- HRH_clean %>%
-  filter(fiscal_year == 2023) %>%
+  filter(fiscal_year == 2024) %>%
   filter(funding_agency == "USAID") %>%
   filter(operating_unit == params$operating_unit) %>%
   select(fiscal_year, funding_agency, program, is_indigenous_prime_partner, actual_annual_spend) %>%
@@ -662,8 +659,8 @@ local_partner <- HRH_clean %>%
     
   scale_y_continuous(labels = label_dollar()) +
     
-  scale_fill_manual(values = c("Yes" = "#1e87a5",
-                              "No" = "#808080")) +
+  scale_fill_manual(values = c("Local" = "#1e87a5",
+                              "International" = "#808080")) +
 
   theme(panel.background = element_rect(fill = "white"),
         axis.line=element_blank(),
@@ -690,7 +687,7 @@ Above site staff are defined as personnel that are not directly interacting or p
 
 # Create a df that shows HRH expenditure and individual count by work location
 patchwork <- HRH_clean %>%
-  filter(fiscal_year == 2023) %>%
+  filter(fiscal_year == 2024) %>%
   filter(funding_agency == "USAID") %>%
   filter(operating_unit == params$operating_unit) %>%
   select(fiscal_year, work_location, actual_annual_spend, individual_count) %>%
@@ -774,7 +771,7 @@ This shows the most common employment title for community-based staff by count
 
 # Create a df that shows HRH expenditure and individual count by the top 5 community titles
 patchwork <- HRH_clean %>%
-  filter(fiscal_year == 2023) %>%
+  filter(fiscal_year == 2024) %>%
   filter(funding_agency == "USAID") %>%
   filter(operating_unit == params$operating_unit) %>%
   filter(is_community_primarily == "Yes") %>%
@@ -838,12 +835,12 @@ This shows the top primary beneficiaries supported by community-based staff by c
 
 # Create a df that shows HRH expenditure and individual count by primary beneficiary
 patchwork <- HRH_clean %>%
-  filter(fiscal_year == 2023) %>%
+  filter(fiscal_year == 2024) %>%
   filter(funding_agency == "USAID") %>%
   filter(operating_unit == params$operating_unit) %>%
   filter(work_location == "Community") %>%
-  select(fiscal_year, beneficiary, actual_annual_spend, individual_count) %>%
-  mutate(beneficiary_wrapped = str_wrap(beneficiary, width = 10)) %>%
+  select(fiscal_year, targeted_beneficiary, actual_annual_spend, individual_count) %>%
+  mutate(beneficiary_wrapped = str_wrap(targeted_beneficiary, width = 10)) %>%
   group_by(beneficiary_wrapped) %>%
   summarise(actual_annual_spend = sum(actual_annual_spend, na.rm = T),
             individual_count = sum(individual_count, na.rm = T)) %>%
@@ -854,14 +851,13 @@ g1 <- ggplot(data = patchwork, mapping = aes(x = reorder(beneficiary_wrapped, -a
     geom_col(alpha = 0.9,
         width = 0.8) +
   
-    scale_fill_manual(values = c("Priority Pops" = "#c43d4d", 
-                              "Key Pops" = "#e07653", 
-                              "Males" = "#2057a7",
+    scale_fill_manual(values = c("Military" = "#c43d4d", 
+                              "Key\nPopulations" = "#e07653", 
+                              "Children" = "#2057a7",
                               "OVC" = "#1e87a5",
-                              "Females" = "#f2bc40",
+                              "AGYW" = "#f2bc40",
                               "Pregnant & Breastfeeding Women" = "#8980cb",
-                              "Non-Targeted Pop" = "#287c6f",
-                              "Not Specified" = "#808080")) +
+                              "Non-Targeted\nPopulations" = "#808080")) +
   
     geom_label_repel(data = patchwork, aes(label = scales::comma(round(individual_count))),
              size = 3.5,
@@ -890,14 +886,13 @@ g2 <- ggplot(data = patchwork, mapping = aes(x = reorder(beneficiary_wrapped, -a
     geom_col(alpha = 0.9,
         width = 0.7) +
   
-    scale_fill_manual(values = c("Priority Pops" = "#c43d4d", 
-                              "Key Pops" = "#e07653", 
-                              "Males" = "#2057a7",
+    scale_fill_manual(values = c("Military" = "#c43d4d", 
+                              "Key\nPopulations" = "#e07653", 
+                              "Children" = "#2057a7",
                               "OVC" = "#1e87a5",
-                              "Females" = "#f2bc40",
+                              "AGYW" = "#f2bc40",
                               "Pregnant & Breastfeeding Women" = "#8980cb",
-                              "Non-Targeted Pop" = "#287c6f",
-                              "Not Specified" = "#808080")) +
+                              "Non-Targeted\nPopulations" = "#808080")) +
   
     geom_label_repel(data = patchwork, aes(label = scales::dollar(round(actual_annual_spend))),
              size = 3.5,
@@ -927,50 +922,50 @@ g3
 
 ## Top Prime Implementation Partners 
 
-This shows the top 5 prime partners with the highest staffing footprint in terms of individual count. Each prime partner is disaggregated by primary program area to indicate the program activities that each partner is primarily engaged in. If requested, we can also provide a deeper dive review of each top implementation partner to better describe their staffing composition.
+This shows the top 5 prime partners with the highest staffing footprint in terms of HRH expenditure. Each prime partner is disaggregated by primary program area to indicate the program activities that each partner is primarily engaged in. If requested, we can also provide a deeper dive review of each top implementation partner to better describe their staffing composition.
 
 
 ```{r fig10, fig.height = 6, fig.width = 8, echo = FALSE, eval = TRUE}
 
 # Pull names of top 5 partners only
 top_5_partners <- HRH_clean %>%
-  filter(fiscal_year == 2023) %>%
+  filter(fiscal_year == 2024) %>%
   filter(funding_agency == "USAID") %>%
   filter(operating_unit == params$operating_unit) %>%
   group_by(prime_partner_name) %>%
-  summarise(individual_count = sum(individual_count, na.rm = T)) %>%
-  arrange(desc(individual_count)) %>%
-  top_n(n = 5, wt = individual_count) %>%
+  summarise(actual_annual_spend = sum(actual_annual_spend, na.rm = T)) %>%
+  arrange(desc(actual_annual_spend)) %>%
+  top_n(n = 5, wt = actual_annual_spend) %>%
   pull(prime_partner_name)
 
 # Create a summary table that filters for the top 5 partner names only
 prime_partners <- HRH_clean %>%
-  filter(fiscal_year == 2023) %>%
+  filter(fiscal_year == 2024) %>%
   filter(funding_agency == "USAID") %>%
   filter(operating_unit == params$operating_unit) %>%
   filter(prime_partner_name %in% top_5_partners) %>%
-  select(fiscal_year, er_category, prime_partner_name, individual_count) %>%
+  select(fiscal_year, er_category, prime_partner_name, actual_annual_spend) %>%
   group_by(prime_partner_name, er_category) %>%
-  summarise(individual_count = sum(individual_count, na.rm = T)) %>%
-  arrange(desc(individual_count)) %>%
+  summarise(actual_annual_spend = sum(actual_annual_spend, na.rm = T)) %>%
+  arrange(desc(actual_annual_spend)) %>%
   mutate(prime_partner_name_wrapped = str_wrap(prime_partner_name, width = 10))
   
 # Now make the plot
-  ggplot(prime_partners, aes(x = reorder(prime_partner_name_wrapped, -individual_count), 
-                             y = individual_count, 
+  ggplot(prime_partners, aes(x = reorder(prime_partner_name_wrapped, -actual_annual_spend), 
+                             y = actual_annual_spend, 
                              fill = er_category,
-                             label = individual_count)) +
+                             label = actual_annual_spend)) +
   
   geom_bar(stat = "identity", width = 0.7) +
     
-  geom_label_repel(data = prime_partners, aes(label = scales::comma(round(individual_count))),
-             size = 4,
+  geom_label_repel(data = prime_partners, aes(label=scales::dollar(round(actual_annual_spend))),
+             size = 3,
              position = position_stack(vjust = 0.5),
              min.segment.length = 0.25,
-             direction = "x",
+          #   direction = "x",
              show.legend = FALSE) +
  
-  scale_y_continuous(labels = scales::comma_format()) +
+  scale_y_continuous(labels = label_dollar()) +
     
   xlab("Prime partner name") +
     
