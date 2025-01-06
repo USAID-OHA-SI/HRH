@@ -19,7 +19,7 @@ library(tibble)
 options(dplyr.summarise.inform = FALSE)
 
 ## ------------------ Import the needed files for HRH, ER, and HRH-ER datasets --------
-fin_data_orig <- read.delim("./1. Data/Financial_Structured_Datasets_COP17-24_20241115.txt") # read in FSD dataset
+fin_data_orig <- read.delim("./1. Data/Financial_Structured_Datasets_COP17-24_20241213.txt") # read in FSD dataset
 load(file = "./4. Outputs/RDS/FY24_cleanHRH.rds") # cleaned HRH dataset
 load(file = "./4. Outputs/RDS/HRH_ER_merged_21_24.rds") # HRH-ER merged dataset
 

@@ -11,12 +11,10 @@ library(sqldf)
 library(janitor)
 
 ## Import the 2021, 2022, and HRH dataset as .txt file
-HRH_data_orig_24 <- read.delim("./1. Data/HRH_Structured_Datasets_Site_IM_FY24_not_redacted_20241115.txt", header = TRUE, stringsAsFactors = FALSE)
-HRH_data_orig_23 <- read.delim("./1. Data/HRH_Structured_Datasets_Site_IM_FY23_not_redacted_20241115.txt", header = TRUE, stringsAsFactors = FALSE)
-HRH_data_orig_22 <- read.delim("./1. Data/HRH_Structured_Datasets_Site_IM_FY22_not_redacted_20241115.txt", header = TRUE, stringsAsFactors = FALSE)
-HRH_data_orig_21 <- read.delim("./1. Data/HRH_Structured_Datasets_Site_IM_FY21_not_redacted_20241115.txt", header = TRUE, stringsAsFactors = FALSE)
-
-#HRH_Structured_Datasets_Site_IM_FY21_not_redacted_20241115
+HRH_data_orig_24 <- read.delim("./1. Data/HRH_Structured_Datasets_Site_IM_FY24_not_redacted_20241213.txt", header = TRUE, stringsAsFactors = FALSE)
+HRH_data_orig_23 <- read.delim("./1. Data/HRH_Structured_Datasets_Site_IM_FY23_not_redacted_20241213.txt", header = TRUE, stringsAsFactors = FALSE)
+HRH_data_orig_22 <- read.delim("./1. Data/HRH_Structured_Datasets_Site_IM_FY22_not_redacted_20241213.txt", header = TRUE, stringsAsFactors = FALSE)
+HRH_data_orig_21 <- read.delim("./1. Data/HRH_Structured_Datasets_Site_IM_FY21_not_redacted_20241213.txt", header = TRUE, stringsAsFactors = FALSE)
 
 ## EDIT: import also the CDC CoAg list
 CoAg <- read_excel("./1. Data/FY24 PEPFAR G2G Mechanisms.xlsx")
@@ -85,14 +83,12 @@ HRH_clean <- left_join(HRH_clean, CoAg, by = "mech_code")
 save(HRH_clean, file = "./4. Outputs/RDS/FY24_cleanHRH.rds")
 
 ## 4. Export as csv
-write.csv(HRH_clean, "./1. Data/HRH_Structured_Datasets_Site_IM_FY21-24_not_redacted_20241115_CLEAN.csv", row.names=FALSE)
+write.csv(HRH_clean, "./1. Data/HRH_Structured_Datasets_Site_IM_FY21-24_not_redacted_20250106_CLEAN.csv", row.names=FALSE)
 
 #### NOTE: MAKE SURE TO CHANGE DATA TYPE FROM NUMBER(WHOLE) TO NUMBER(DECIMAL) IN TABLEAU DASHBOARD
 
 
-
 ###------------------ ALSO PREPARE ANY EXTERNAL DATASETS WE MAY NEED------------------####
-
 
 
 #Import 2024 MER targets

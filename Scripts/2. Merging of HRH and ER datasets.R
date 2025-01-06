@@ -17,10 +17,10 @@ library(readxl)
 library(writexl)
 
 ## 2.  Uploading files
-fin_data_orig <- read.delim("./1. Data/Financial_Structured_Datasets_COP17-24_20241115.txt") # read in FSD dataset
+fin_data_orig <- read.delim("./1. Data/Financial_Structured_Datasets_COP17-24_20241213.txt") # read in FSD dataset
 load(file = "./4. Outputs/RDS/FY24_cleanHRH.rds") # cleaned HRH dataset
 
-###---------- Identifying any UN multilateral mechanisms to be removed form HRH and ER dataset --------------------------
+###---------- Identifying any UN multilateral mechanisms to be removed from HRH and ER dataset --------------------------
 
 # pull ER mech codes to be removed by keyword flag
 removedERmechs <- fin_data_orig %>%
@@ -295,5 +295,3 @@ write.csv(finalMerge, "./4. Outputs/HRH_ER_merged_21_24.csv", row.names=FALSE)
 save(finalMerge, file = "./4. Outputs/RDS/HRH_ER_merged_21_24.rds")
 
 #### NOTE: MAKE SURE TO CHANGE DATA TYPE FROM NUMBER(WHOLE) TO NUMBER(DECIMAL) IN TABLEAU DASHBOARD
-
-
