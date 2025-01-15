@@ -25,7 +25,7 @@ operating_unit <- c("Botswana",
                     "Tanzania",
                     "Zimbabwe",
                     "Kenya",
-                    "Cameroon",
+                #    "Cameroon",
                     "Uganda",
                     "Zambia")
 

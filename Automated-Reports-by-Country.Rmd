@@ -8,7 +8,7 @@ date: "`r format(Sys.time(), '%d %B, %Y')`"
 
 params: 
     set_title: "My Title!"
-    operating_unit: !r c("Lesotho")
+    operating_unit: !r c("Tanzania")
     fiscal_year: "FY24"
 ---
 
@@ -46,9 +46,7 @@ library(patchwork)
 
 ## Background
 
-This HRH Inventory Briefer provides a detailed summary of the FY24 HRH Inventory for Tanzania. This report will summarize the HRH inventory templates submitted by prime implementation partners to help Mission teams better monitor and understand their PEPFAR-supported staffing footprint.
-
-Missions should use these briefers to review their staffing investments and trends at the OU level to inform programming and facilitate HRH planning. If there are questions on the summary info provided here, please reach out to the HRH Reporting Helpdesk (hrh-reporting-helpdesk@usaid.gov)
+This HRH Inventory Briefer provides a detailed summary of the FY24 HRH Inventory for Tanzania. This report summarizes data gathered through the HRH inventory templates submitted by prime implementation partners. This report is meant to help Mission teams better monitor and understand their PEPFAR-supported staffing footprint. Missions should use these briefers to review their staffing investments and trends at the OU level to inform programming and facilitate HRH planning in line with COP guidance, including for the long-term sustainability of the HIV response. If there are questions on the summary info provided here, please reach out to the HRH Reporting Helpdesk (hrh-reporting-helpdesk@usaid.gov). Additional data and visualizations can be provided upon request. 
 
 ```{r}
 
@@ -61,9 +59,10 @@ load(file = "./4. Outputs/RDS/HRH_ER_merged_21_24.rds") # HRH-ER merged dataset
 ```
 
 ## `r params$fiscal_year` HRH Inventory Completeness and Data Quality
-This table shows the number of mechanisms (and their associated staffing expenditure) in `r params$operating_unit` that submitted both the ER and HRH inventory templates for `r params$fiscal_year`. This allows us to better understand the overall completeness of the HRH inventory in terms of the number of mechanisms that were submitted, and the total dollar value that was reported to HRH compared to ER. 
 
-The total staffing expenditure reported in HRH and ER by USAID, CDC, and other agencies should closely match each other. The reported HRH and ER staffing expenditures will not always exactly match each other, but are still expected to be aligned. HRH and ER reporting from each implementing partner must collaborate together to ensure alignment of reported staffing expenditure. If there are mechanisms that submitted staffing expenses in their Expenditure Report, but did not submit their HRH inventory template, please follow up with partners accordingly to ensure timely submissions in the next reporting cycle.
+Table 1 shows the number of mechanisms and their associated staffing expenditure in `params$operating_unit` that submitted both the Expenditure Reporting (ER) and HRH Inventory templates for `r params$fiscal_year`. This information provides for better understanding of the overall completeness of the HRH inventory in terms of the number of mechanisms that were submitted, and the total dollar value that was reported to HRH compared to ER.
+
+The total staffing expenditure reported in HRH and ER by USAID, CDC, and other agencies should closely match each other. However, the reported HRH and ER staffing expenditures will not always exactly match each other because ER staffing expenditures reported under ‘Other Contracts’ or ‘Contracted Interventions’ cost categories cannot be fully disaggregated. HRH and ER reporting from each implementing partner should have worked together to ensure alignment of reported staffing expenditures. 
 
 ```{r, echo = FALSE, eval = TRUE}
 
@@ -85,6 +84,8 @@ mech_submissions <- finalMerge %>%
   arrange(desc(HRH_expenditure_amt)) %>%
   adorn_totals() %>%
   mutate(pct_submission_rate = HRH_expenditure_amt / ER_expenditure_amt) %>%
+  mutate(funding_agency = if_else(funding_agency == "Total", "PEPFAR", funding_agency)) %>%
+  arrange(desc(HRH_expenditure_amt)) %>%
   
   # format the columns
   mutate(across(4:5, formattable::currency,digits=0)) %>%
@@ -94,16 +95,16 @@ mech_submissions <- finalMerge %>%
 knitr::kable(mech_submissions, "simple", 
              col.names=c("Funding Agency", "No. of HRH Submissions", "No. of ER Submissions", 
                          "HRH Expenditure Amount (USD)", "ER Expenditure Amount   (USD)", "HRH Expenditure as % of ER Expenditure"),
-             caption = "Submission Rate by Agency")
-
-#mech_submissions <- gt(mech_submissions)
+             caption = "Table I: Submission Rate by Agency")
 
 
 ```
 
-## `r params$fiscal_year` PEPFAR vs USAID HRH Staffing footprint
+## `r params$fiscal_year` PEPFAR Staffing Footprint
 
-This provides a summary of USAID’s staffing size relative to the overall PEPFAR program in `r params$operating_unit`. This shows USAID’s staffing footprint relative to the full PEPFAR staffing footprint (individual count and full time equivalence), the % of spending going towards staffing, and the amount spent by local prime implementation partners. This serves as an indicator for USAID’s level of staffing investment in the country relative to other implementing agencies.
+Table 1 shows the number of mechanisms and their associated staffing expenditure in `r params$operating_unit` that submitted both the Expenditure Reporting (ER) and HRH Inventory templates this year. This information provides for better understanding of the overall completeness of the HRH inventory in terms of the number of mechanisms that were submitted, and the total dollar value that was reported to HRH compared to ER.
+
+The total staffing expenditure reported in HRH and ER by USAID, CDC, and other agencies should closely match each other. However, the reported HRH and ER staffing expenditures will not always exactly match each other because ER staffing expenditures reported under ‘Other Contracts’ or ‘Contracted Interventions’ cost categories cannot be fully disaggregated. HRH and ER reporting from each implementing partner should have worked together to ensure alignment of reported staffing expenditures. 
 
 ```{r echo = FALSE, eval = TRUE}
 
@@ -116,8 +117,7 @@ infographic_PEPFAR <- HRH_clean %>%
   summarise(HRH_expenditure = sum(actual_annual_spend, na.rm = T),
             individual_count = sum(individual_count, na.rm = T),
             annual_fte = sum(annual_fte, na.rm = T),
-            placeholder_pctHRH = sum(actual_annual_spend, na.rm = T),
-            local_partner_expenditures = sum(actual_annual_spend[is_indigenous_prime_partner == "Y"]))
+            placeholder_pctHRH = sum(actual_annual_spend, na.rm = T))
 
 # Calculate the % spent towards staffing
 PEPFAR_pct_HRH <- finalMerge %>%
@@ -135,60 +135,78 @@ infographic_PEPFAR <- infographic_PEPFAR %>%
   mutate(placeholder_pctHRH = PEPFAR_pct_HRH) %>%
   rename(pct_HRH = placeholder_pctHRH)
 
-# Now, create the second df that summarizes USAID only
+# Now, create the second df that summarizes the individual funding agencies
 infographic_USAID <- HRH_clean %>%
   filter(fiscal_year == 2024) %>%
   filter(operating_unit == params$operating_unit) %>%
-  filter(funding_agency == "USAID") %>%
+  mutate(funding_agency = if_else(funding_agency != "USAID" & funding_agency != "CDC", "Other", funding_agency)) %>%
   group_by(funding_agency) %>%
   summarise(HRH_expenditure = sum(actual_annual_spend, na.rm = T),
             individual_count = sum(individual_count, na.rm = T),
             annual_fte = sum(annual_fte, na.rm = T),
-            placeholder_pctHRH = sum(actual_annual_spend, na.rm = T),
-            local_partner_expenditures = sum(actual_annual_spend[is_indigenous_prime_partner == "Y"]))
+            placeholder_pctHRH = sum(actual_annual_spend, na.rm = T))
 
-# Calculate the % spent towards staffing for USAID
+# Calculate the % spent towards staffing for the individual funding agencies
 USAID_pct_HRH <- finalMerge %>%
   filter(year == 2024) %>%
   filter(operating_unit == params$operating_unit) %>%
-  filter(funding_agency == "USAID") %>%
-  group_by(year, operating_unit) %>%
+  group_by(year, operating_unit, funding_agency) %>%
   summarise(HRH_expenditure_amt = sum(HRH_expenditure_amt, na.rm = T),
             ER_expenditure_amt = sum(ER_expenditure_amt, na.rm = T)) %>%
   ungroup() %>%
-  mutate(USAID_pct_HRH = HRH_expenditure_amt / ER_expenditure_amt) %>%
-  pull(USAID_pct_HRH)
+  mutate(pct_HRH = HRH_expenditure_amt / ER_expenditure_amt) %>%
+  select(funding_agency, pct_HRH)
 
-# Replace the % HRH placeholder value with the calculated value for USAID
-infographic_USAID <- infographic_USAID %>%
-  mutate(placeholder_pctHRH = USAID_pct_HRH) %>%
-  rename(pct_HRH = placeholder_pctHRH)
+# Replace the % HRH placeholder value with the calculated values
+infographic_USAID <- left_join(infographic_USAID, USAID_pct_HRH, by = "funding_agency") %>%
+  select(-placeholder_pctHRH)
 
 # Lastly, bind both data frames together to create the final summary table
 infographic <- rbind(infographic_PEPFAR, infographic_USAID) %>%
+  arrange(desc(HRH_expenditure)) %>%
 
 # format the columns
   mutate(across(2, formattable::currency, digits=0)) %>%
   mutate(across(3:4, formattable::accounting, digits=0)) %>%
-  mutate(across(5, formattable::percent, digits=0)) %>%
-  mutate(across(6, formattable::currency, digits=0))
+  mutate(across(5, formattable::percent, digits=0))
 
 # Display the final summary table with formatted column names
 knitr::kable(infographic, "simple", 
              col.names=c("Funding Agency", "HRH Staffing Expenditure", "Individual Count", 
-                         "Total FTE (Full-Time Equivalence)", "% of Total Expenditures Spent Towards HRH", 
-                         "Local Partner HRH Staffing Expenditure"),
-             caption = "HRH Summary: By The Numbers")
+                         "Total FTE (Full-Time Equivalence)", "% of Total Expenditures Spent Towards HRH"),
+             caption = "Table 2: USAID’s HRH Investments as a Proportion of PEPFAR’s HRH Investments")
+
+# EDIT: Calculate the % of PEPFAR HRH expenditures channeled through USAID vs CDC for in-line text
+PEPFAR_HRH_expenditure <- infographic_PEPFAR %>%
+  pull(HRH_expenditure)
+
+pct_USAID <- infographic %>%
+  select(funding_agency, HRH_expenditure, individual_count) %>%
+  filter(funding_agency == "USAID") %>%
+  mutate(pct_HRH = HRH_expenditure / PEPFAR_HRH_expenditure) %>%
+  mutate(across(4, formattable::percent, digits=0)) %>%
+  pull(pct_HRH)
+
+pct_CDC <- infographic %>%
+  select(funding_agency, HRH_expenditure, individual_count) %>%
+  filter(funding_agency == "CDC") %>%
+  mutate(pct_HRH = HRH_expenditure / PEPFAR_HRH_expenditure) %>%
+  mutate(across(4, formattable::percent, digits=0)) %>%
+  pull(pct_HRH)
 
 ```
 
-## Funding Agency
+Overall, about `r pct_USAID` of PEPFAR's HRH expenditures are channeled through USAID while `r pct_CDC` of PEPFAR's HRH expenditures are channeled through CDC.
 
-Breakdown of HRH expenditure and number of individual staff supported by USAID, CDC, and other agencies. This provides a summary of the total staffing expenditure and total headcount that are being supported by each agency to implement their `r params$fiscal_year` program activities.
+\pagebreak
+
+## `r params$fiscal_year` Staffing by Funding Agency
+
+Figure 1 provides a summary of the total staffing expenditure and total headcount supported by each PEPFAR implementing agency (USAID, CDC, and Other) for implementation of FY24 program activities.
 
 ```{r fig1, fig.height = 6, fig.width = 10, echo = FALSE, eval = TRUE}
 
-# First, create a df that shows HRH expenditure and individual count by program area
+# First, create a df that shows HRH expenditure and individual count by agency
 patchwork <- HRH_clean %>%
   filter(fiscal_year == 2024) %>%
   filter(operating_unit == params$operating_unit) %>%
@@ -214,7 +232,7 @@ g1 <- ggplot(data = patchwork, mapping = aes(x = reorder(funding_agency, -actual
   
     theme_tq() +
   
-    labs(title = stringr::str_glue("Individual Count by Funding Agency")) +
+    labs(title = stringr::str_glue("Individual Count")) +
     theme(axis.line=element_blank(),
         axis.text.y=element_blank(),
         axis.ticks=element_blank(),
@@ -241,7 +259,7 @@ g2 <- ggplot(data = patchwork, mapping = aes(x = reorder(funding_agency, -actual
   
     theme_tq() +
   
-    labs(title = stringr::str_glue("HRH Expenditure by Funding Agency")) +
+    labs(title = stringr::str_glue("HRH Expenditure")) +
     theme(axis.line=element_blank(),
         axis.text.y=element_blank(),
         axis.ticks=element_blank(),
@@ -251,7 +269,7 @@ g2 <- ggplot(data = patchwork, mapping = aes(x = reorder(funding_agency, -actual
         plot.title = element_text(size = 15),
         text = element_text(size = 18)) 
    
-g3 <- g2 + g1
+g3 <- g2 + g1 + plot_annotation('Figure 1: HRH Expenditure and Individual Count by PEPFAR Funding Agency', theme=theme(plot.title=element_text(size=15)))
 
 g3
 
@@ -260,12 +278,81 @@ g3
 
 \pagebreak
 
+## `r params$fiscal_year` Top USAID Prime Implementation Partners 
+
+Figure 2 shows the top five prime partners with the highest HRH expenditure for USAID in `r params$operating_unit`. Each prime partner is disaggregated by primary program area to indicate the program activities that each partner is engaged in. Additional partner-level or mechanism-level deep dives can be provided upon request.
+
+```{r fig10, fig.height = 6, fig.width = 10, echo = FALSE, eval = TRUE}
+
+# Pull names of top 5 partners only
+top_5_partners <- HRH_clean %>%
+  filter(fiscal_year == 2024) %>%
+  filter(funding_agency == "USAID") %>%
+  filter(operating_unit == params$operating_unit) %>%
+  group_by(prime_partner_name) %>%
+  summarise(actual_annual_spend = sum(actual_annual_spend, na.rm = T)) %>%
+  arrange(desc(actual_annual_spend)) %>%
+  top_n(n = 5, wt = actual_annual_spend) %>%
+  pull(prime_partner_name)
+
+# Create a summary table that filters for the top 5 partner names only
+prime_partners <- HRH_clean %>%
+  filter(fiscal_year == 2024) %>%
+  filter(funding_agency == "USAID") %>%
+  filter(operating_unit == params$operating_unit) %>%
+  filter(prime_partner_name %in% top_5_partners) %>%
+  select(fiscal_year, er_category, prime_partner_name, actual_annual_spend) %>%
+  group_by(prime_partner_name, er_category) %>%
+  summarise(actual_annual_spend = sum(actual_annual_spend, na.rm = T)) %>%
+  arrange(desc(actual_annual_spend)) %>%
+  mutate(prime_partner_name_wrapped = str_wrap(prime_partner_name, width = 10))
+  
+# Now make the plot
+  ggplot(prime_partners, aes(x = reorder(prime_partner_name_wrapped, -actual_annual_spend), 
+                             y = actual_annual_spend, 
+                             fill = er_category,
+                             label = actual_annual_spend)) +
+  
+  geom_bar(stat = "identity", width = 0.7) +
+    
+  geom_label_repel(data = prime_partners, aes(label=scales::dollar(round(actual_annual_spend))),
+             size = 3,
+             position = position_stack(vjust = 0.5),
+             min.segment.length = 0.25,
+          #   direction = "x",
+             show.legend = FALSE) +
+ 
+  scale_y_continuous(labels = label_dollar()) +
+    
+  ggtitle("Figure 2: Top Five Prime Implementing Partners by HRH Expenditure") +
+    
+  xlab("Prime Partner Name") +
+    
+  ylab("HRH Expenditure") + 
+    
+  labs(fill = "Worker Type (ER Category)") +
+  
+  scale_fill_manual(values = c("HCW: Ancillary" = "#287c6f", 
+                              "HCW: Clinical" =  "#2057a7", 
+                              "Other Staff" = "#808080", 
+                              "Program Management" = "#C43d4d")) +
+    
+  theme_tq() +
+  
+  theme(plot.title = element_text(size = 10),
+        text = element_text(size = 10),
+        axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1)) 
+
+```
+
+\pagebreak
+
 ## Primary Program Areas
-Breakdown of total HRH expenditure and number of individual staff by primary program area for USAID. This shows a general view of which program areas that staff are ‘primarily’ working on. Note that the HRH inventory collects data on ‘primary’ program areas where staff can only be categorized towards one program area that accounts for most of their worker time. While staff may be working on multiple program areas, staff can only be categorized towards one program area in the HRH inventory.
+Figure 3 shows total HRH expenditure and the number of individual staff by primary program area for USAID. Note that the HRH inventory collects data on ‘primary’ program area; staff can only be categorized in the one program area that accounts for most of their time. While staff typically work on multiple program areas, only the primary program area is reported at this time.
 
-With this in mind, we typically see higher Program Management (PM) and Above Service Programming (ASP) staffing expenditures while seeing lower staffing expenditures for Prevention (PREV), Socioeconomic (SE), or HIV Testing (HTS). This may indicate that non-service delivery staff may be higher cost (though lower by staff count) compared to service delivery staff working at community level (with higher staff count, but lower cost)
+It is not uncommon to see higher staffing expenditures for Program Management (PM) and Above Service Programming (ASP) and lower expenditures for Prevention (PREV), Socioeconomic (SE), or HIV Testing (HTS) program areas. A number of factors may contribute to the level and ranking of HRH expenditure for program areas. Ranking may be impacted by various factors including higher costs for technical experts, higher volume for specific cadres, or local vs international partner costs.
 
-```{r fig2, fig.height = 8, fig.width = 10, echo = FALSE, eval = TRUE}
+```{r fig2, fig.height = 6, fig.width = 10, echo = FALSE, eval = TRUE}
 
 # Create a df that shows HRH expenditure and individual count by program area
 patchwork <- HRH_clean %>%
@@ -308,7 +395,7 @@ g1 <- ggplot(data = patchwork, mapping = aes(x = reorder(program, -actual_annual
   
     theme_tq() +
   
-    labs(title = stringr::str_glue("Individual Count by Program Area in {params$operating_unit}")) +
+    labs(title = stringr::str_glue("Individual Count by Program Area")) +
     theme(axis.line=element_blank(),
         axis.text.y=element_blank(),
         axis.ticks=element_blank(),
@@ -340,7 +427,7 @@ g2 <- ggplot(data = patchwork, mapping = aes(x = reorder(program, -actual_annual
   
     theme_tq() +
   
-    labs(title = stringr::str_glue("HRH Expenditure by Funding Agency in {params$operating_unit}")) +
+    labs(title = stringr::str_glue("HRH Expenditure by Program Area")) +
     theme(axis.line=element_blank(),
         axis.text.y=element_blank(),
         axis.ticks=element_blank(),
@@ -355,11 +442,12 @@ g3 <- g2 + g1
 g3
 
 ```
+Key: PM = Program Management, ASP = Above Site Programming, C&T = Care and Treatment, SE = Socioeconomic, HTS = HIV Testing Services, PREV = Prevention
 
 \pagebreak
 
 ## Top Employment Titles Based on Individual Count
-This shows the top 5 employment titles supported by PEPFAR USAID based on individual count. The most common employment titles with the highest staff count are typically community-based staff providing direct service delivery.
+Figure 4 shows the top five employment titles supported by PEPFAR USAID based on individual count. The total expenditure for each title is also provided. Across PEPFAR-supported countries, the employment titles with the highest staff count are typically community-based staff providing direct service delivery.
 
 ```{r fig3, fig.height = 4, fig.width = 7, echo = FALSE, eval = TRUE}
 
@@ -399,7 +487,7 @@ g1 <- ggplot(data = patchwork, mapping = aes(x = reorder(employment_title_wrappe
   
     theme_tq() +
   
-    labs(title = stringr::str_glue("Individual Count by Top Employment Titles")) +
+    labs(title = stringr::str_glue("Individual Count")) +
     theme(axis.line=element_blank(),
         axis.text.y=element_blank(),
         axis.ticks=element_blank(),
@@ -431,7 +519,7 @@ g2 <- ggplot(data = patchwork, mapping = aes(x = reorder(employment_title_wrappe
   
     theme_tq() +
   
-    labs(title = stringr::str_glue("HRH Expenditure by Top Employment Titles")) +
+    labs(title = stringr::str_glue("HRH Expenditure")) +
     theme(axis.line=element_blank(),
         axis.text.y=element_blank(),
         axis.ticks=element_blank(),
@@ -441,14 +529,14 @@ g2 <- ggplot(data = patchwork, mapping = aes(x = reorder(employment_title_wrappe
         plot.title = element_text(size = 10),
         axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1)) 
    
-g3 <- g2 + g1
+g3 <- g2 + g1 + plot_annotation('Figure 4: Top Employment Titles by Individual Count (along with their HRH expenditure)', theme=theme(plot.title=element_text(size=10)))
 
 g3
 
 ```
 
 ## Top Employment Titles Based on HRH Expenditure
-This shows the top 5 employment titles supported by PEPFAR USAID based on HRH expenditure. The most common employment titles with the highest HRH expenditure are typically above site, non-service delivery staff
+Figure 5 shows the top five employment titles supported by PEPFAR USAID based on HRH expenditure. Counts for each are also provided. Across PEPFAR-supported countries, employment titles with the highest HRH expenditure are typically above site, non-service delivery staff.
 
 ```{r fig4, fig.height = 4, fig.width = 7, echo = FALSE, eval = TRUE}
 
@@ -488,7 +576,7 @@ g1 <- ggplot(data = patchwork, mapping = aes(x = reorder(employment_title_wrappe
   
     theme_tq() +
   
-    labs(title = stringr::str_glue("Individual Count by Top Employment Titles")) +
+    labs(title = stringr::str_glue("Individual Count")) +
     theme(axis.line=element_blank(),
         axis.text.y=element_blank(),
         axis.ticks=element_blank(),
@@ -520,7 +608,7 @@ g2 <- ggplot(data = patchwork, mapping = aes(x = reorder(employment_title_wrappe
   
     theme_tq() +
   
-    labs(title = stringr::str_glue("HRH Expenditure by Top Employment Titles")) +
+    labs(title = stringr::str_glue("HRH Expenditure")) +
     theme(axis.line=element_blank(),
         axis.text.y=element_blank(),
         axis.ticks=element_blank(),
@@ -530,14 +618,17 @@ g2 <- ggplot(data = patchwork, mapping = aes(x = reorder(employment_title_wrappe
         plot.title = element_text(size = 10),
         axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1)) 
    
-g3 <- g2 + g1
+g3 <- g2 + g1 + plot_annotation('Figure 5: Top Employment Titles by HRH Expenditure (along with their Individual Count)', theme=theme(plot.title=element_text(size=10)))
+
 
 g3
 
 ```
 
-## Median Annual Remuneration
-This scatter plot shows the median annual remuneration (i.e. estimated annual salary) of the top 10 employment titles among USAID IPs. This graph shows the range of remuneration for each employment title where each dot represents an individual’s estimated annual remuneration. 
+\pagebreak
+
+## `r params$fiscal_year` Median Annual Remuneration
+Figure 6 presents a scatter plot that shows the median annual remuneration (i.e. based on estimated annual salary) of the top 10 employment titles across all USAID Implementing Partners. Each dot represents an individual’s estimated annual remuneration, and the black line represents the median annual remuneration for the employment title. The density of the dots reflects the number of individuals contributing to the median, and the range can be interpreted via the spread of the individual dots.
 
 ```{r fig5, fig.height = 8, fig.width = 10, echo = FALSE, eval = TRUE}
 
@@ -605,6 +696,9 @@ ggplot(remuneration,
   
   labs(x = "Employment Title", y = "Median Annual Remuneration") + 
   
+  plot_annotation('Figure 6: Median Annual Remuneration for Top 10 Employment Titles', theme=theme(plot.title=element_text(size=16))) +
+
+  
   scale_fill_manual(values = rep(NA, 2)) +
   
   theme_tq() +
@@ -619,8 +713,10 @@ ggplot(remuneration,
 
 ```
 
+\pagebreak
+
 ## Local Partners
-This shows how much of USAID’s HRH expenditure is channeled through prime local partners for each primary program area. Note that Local Partners here are defined as local organizations that were awarded as the prime partner, and not as sub-awardees/subrecipients. If a local organization is a subrecipient while the prime partner is an international organization for a given mechanism, then the subrecipient's staffing expenditures will be considered as non-local. This should provide a picture of the level of local partner involvement in implementing PEPFAR USAID program activities prime partners.
+In support of USAID’s localization goal, Figure 7 shows how much of USAID’s HRH expenditure is channeled through prime local partners for each primary program area. Note that Local Partners here are defined as local organizations that were awarded as the prime partner, and not as sub-awardees/subrecipients. If a local organization is a subrecipient while the prime partner is an international organization for a given mechanism, then the subrecipient's staffing expenditures will be considered as non-local. While incomplete in terms of the overall localization goal picture, this figure can provide an indication of the level of prime local partner support for HRH in PEPFAR USAID programming.
 
 ```{r fig6, fig.height = 5, fig.width = 6, echo = FALSE, eval = TRUE}
 
@@ -657,6 +753,8 @@ local_partner <- HRH_clean %>%
     
   labs(fill = "Prime Local Partner?") +
     
+  plot_annotation('Figure 7: Prime Local Partner Support of HRH by Primary Program Area', theme=theme(plot.title=element_text(size=10))) +
+    
   scale_y_continuous(labels = label_dollar()) +
     
   scale_fill_manual(values = c("Local" = "#1e87a5",
@@ -668,7 +766,8 @@ local_partner <- HRH_clean %>%
         axis.ticks=element_blank(),
         axis.title.x=element_blank(),
         axis.title.y=element_blank(),
-        plot.title = element_text(size = 10)) +
+        plot.title = element_text(size = 10),
+        text = element_text(size = 10)) +
   
   theme_tq() 
   
@@ -677,11 +776,9 @@ local_partner <- HRH_clean %>%
 \pagebreak
 
 ## Work Location
+Figure 8 shows the work location of USAID staff by HRH expenditure and individual count. Categories include above site, facility-based, community-based, or roving. Above site staff are defined as personnel that are not directly interacting or providing services to beneficiaries (e.g. technical assistance personnel or support staff based mostly in offices). Roving staff provide direct service delivery in multiple facilities. 
 
-This shows the work location of USAID staff in terms of HRH expenditure and individual count. Examine to identify where most staff are located and if this is reflective of the program.  
-
-Above site staff are defined as personnel that are not directly interacting or providing services to beneficiaries (e.g. TA personnel or support staff based mostly in offices). Roving staff are direct service delivery staff that are providing services in multiple facilities.
-
+This figure can provide an illustration of the balance of facility and non-facility-based staff. The distribution required in a given PEPFAR-supported country will be determined by program needs. 
 
 ```{r fig7, fig.height = 6, fig.width = 8, echo = FALSE, eval = TRUE}
 
@@ -716,7 +813,7 @@ g1 <- ggplot(data = patchwork, mapping = aes(x = reorder(work_location, -actual_
   
     theme_tq() +
   
-    labs(title = stringr::str_glue("Individual Count by Work Location")) +
+    labs(title = stringr::str_glue("Individual Count")) +
     theme(axis.line=element_blank(),
         axis.text.y=element_blank(),
         axis.ticks=element_blank(),
@@ -744,9 +841,11 @@ g2 <- ggplot(data = patchwork, mapping = aes(x = reorder(work_location, -actual_
              direction = "y",
              show.legend = FALSE) +
   
+  plot_annotation('Figure 8: HRH Expenditure and Individual Count by Work Location', theme=theme(plot.title=element_text(size=14))) +
+  
     theme_tq() +
   
-    labs(title = stringr::str_glue("HRH Expenditure by Work Location")) +
+    labs(title = stringr::str_glue("HRH Expenditure")) +
     theme(axis.line=element_blank(),
         axis.text.y=element_blank(),
         axis.ticks=element_blank(),
@@ -765,7 +864,7 @@ g3
 \pagebreak
 
 ## Top Employment Titles for Community-Based Staff
-This shows the most common employment title for community-based staff by count
+Figure 9 shows the top five employment titles for community-based staff by count. Moving towards sustainable programming will require comparing PEPFAR-supported employment titles and job functions with local government- and private sector-supported positions/functions and considering pathways to sustainability for the PEPFAR-supported workforce. 
 
 ```{r fig8, fig.height = 5, fig.width = 8, echo = FALSE, eval = TRUE}
 
@@ -824,12 +923,14 @@ g1 <- patchwork %>%
   
     coord_flip()
 
-g1
+g1 + plot_annotation('Figure 9: Top Five Employment Titles for Community-Based Staff by Individual Count', theme=theme(plot.title=element_text(size=14))) 
 
 ```
 
+\pagebreak
+
 ## Top Primary Beneficiaries for Community-Based Staff
-This shows the top primary beneficiaries supported by community-based staff by count
+This shows the top primary beneficiaries supported of community-based staff by individual count
 
 ```{r fig9, fig.height = 5, fig.width = 8, echo = FALSE, eval = TRUE}
 
@@ -868,7 +969,7 @@ g1 <- ggplot(data = patchwork, mapping = aes(x = reorder(beneficiary_wrapped, -a
   
     theme_tq() +
   
-    labs(title = stringr::str_glue("Individual Count by Primary Beneficiary")) +
+    labs(title = stringr::str_glue("Individual Count")) +
     theme(axis.line=element_blank(),
         axis.text.y=element_blank(),
         axis.ticks=element_blank(),
@@ -903,7 +1004,7 @@ g2 <- ggplot(data = patchwork, mapping = aes(x = reorder(beneficiary_wrapped, -a
   
     theme_tq() +
   
-    labs(title = stringr::str_glue("HRH Expenditure by Primary Beneficiary")) +
+    labs(title = stringr::str_glue("HRH Expenditure")) +
     theme(axis.line=element_blank(),
         axis.text.y=element_blank(),
         axis.ticks=element_blank(),
@@ -914,80 +1015,9 @@ g2 <- ggplot(data = patchwork, mapping = aes(x = reorder(beneficiary_wrapped, -a
         text = element_text(size = 13),
         axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1)) 
    
-g3 <- g2 + g1
+g3 <- g2 + g1 + plot_annotation('Figure 10: Top Primary Beneficiaries for Community-Based Staff by Individual Count and HRH Expenditure', theme=theme(plot.title=element_text(size=12)))
 
 g3
-
-```
-
-## Top Prime Implementation Partners 
-
-This shows the top 5 prime partners with the highest staffing footprint in terms of HRH expenditure. Each prime partner is disaggregated by primary program area to indicate the program activities that each partner is primarily engaged in. If requested, we can also provide a deeper dive review of each top implementation partner to better describe their staffing composition.
-
-
-```{r fig10, fig.height = 6, fig.width = 8, echo = FALSE, eval = TRUE}
-
-# Pull names of top 5 partners only
-top_5_partners <- HRH_clean %>%
-  filter(fiscal_year == 2024) %>%
-  filter(funding_agency == "USAID") %>%
-  filter(operating_unit == params$operating_unit) %>%
-  group_by(prime_partner_name) %>%
-  summarise(actual_annual_spend = sum(actual_annual_spend, na.rm = T)) %>%
-  arrange(desc(actual_annual_spend)) %>%
-  top_n(n = 5, wt = actual_annual_spend) %>%
-  pull(prime_partner_name)
-
-# Create a summary table that filters for the top 5 partner names only
-prime_partners <- HRH_clean %>%
-  filter(fiscal_year == 2024) %>%
-  filter(funding_agency == "USAID") %>%
-  filter(operating_unit == params$operating_unit) %>%
-  filter(prime_partner_name %in% top_5_partners) %>%
-  select(fiscal_year, er_category, prime_partner_name, actual_annual_spend) %>%
-  group_by(prime_partner_name, er_category) %>%
-  summarise(actual_annual_spend = sum(actual_annual_spend, na.rm = T)) %>%
-  arrange(desc(actual_annual_spend)) %>%
-  mutate(prime_partner_name_wrapped = str_wrap(prime_partner_name, width = 10))
-  
-# Now make the plot
-  ggplot(prime_partners, aes(x = reorder(prime_partner_name_wrapped, -actual_annual_spend), 
-                             y = actual_annual_spend, 
-                             fill = er_category,
-                             label = actual_annual_spend)) +
-  
-  geom_bar(stat = "identity", width = 0.7) +
-    
-  geom_label_repel(data = prime_partners, aes(label=scales::dollar(round(actual_annual_spend))),
-             size = 3,
-             position = position_stack(vjust = 0.5),
-             min.segment.length = 0.25,
-          #   direction = "x",
-             show.legend = FALSE) +
- 
-  scale_y_continuous(labels = label_dollar()) +
-    
-  xlab("Prime partner name") +
-    
-  ylab("Individual Count") + 
-    
-  labs(fill = "Worker Type (ER Category)") +
-  
-  scale_fill_manual(values = c("HCW: Ancillary" = "#287c6f", 
-                              "HCW: Clinical" =  "#2057a7", 
-                              "Other Staff" = "#808080", 
-                              "Program Management" = "#C43d4d")) +
-    
-  theme_tq() +
-  
-  theme(axis.line=element_blank(),
-        axis.text.y=element_blank(),
-        axis.ticks=element_blank(),
-        axis.title.x=element_blank(),
-        axis.title.y=element_blank(),
-        plot.title = element_text(size = 10),
-        text = element_text(size = 13),
-        axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1)) 
 
 ```
 
