@@ -60,7 +60,7 @@ load(file = "./4. Outputs/RDS/HRH_ER_merged_21_24.rds") # HRH-ER merged dataset
 
 ## `r params$fiscal_year` HRH Inventory Completeness and Data Quality
 
-Table 1 shows the number of mechanisms and their associated staffing expenditure in `params$operating_unit` that submitted both the Expenditure Reporting (ER) and HRH Inventory templates for `r params$fiscal_year`. This information provides for better understanding of the overall completeness of the HRH inventory in terms of the number of mechanisms that were submitted, and the total dollar value that was reported to HRH compared to ER.
+Table 1 shows the number of mechanisms and their associated staffing expenditure in `r params$operating_unit` that submitted both the Expenditure Reporting (ER) and HRH Inventory templates for `r params$fiscal_year`. This information provides for better understanding of the overall completeness of the HRH inventory in terms of the number of mechanisms that were submitted, and the total dollar value that was reported to HRH compared to ER.
 
 The total staffing expenditure reported in HRH and ER by USAID, CDC, and other agencies should closely match each other. However, the reported HRH and ER staffing expenditures will not always exactly match each other because ER staffing expenditures reported under ‘Other Contracts’ or ‘Contracted Interventions’ cost categories cannot be fully disaggregated. HRH and ER reporting from each implementing partner should have worked together to ensure alignment of reported staffing expenditures. 
 
@@ -102,9 +102,7 @@ knitr::kable(mech_submissions, "simple",
 
 ## `r params$fiscal_year` PEPFAR Staffing Footprint
 
-Table 1 shows the number of mechanisms and their associated staffing expenditure in `r params$operating_unit` that submitted both the Expenditure Reporting (ER) and HRH Inventory templates this year. This information provides for better understanding of the overall completeness of the HRH inventory in terms of the number of mechanisms that were submitted, and the total dollar value that was reported to HRH compared to ER.
-
-The total staffing expenditure reported in HRH and ER by USAID, CDC, and other agencies should closely match each other. However, the reported HRH and ER staffing expenditures will not always exactly match each other because ER staffing expenditures reported under ‘Other Contracts’ or ‘Contracted Interventions’ cost categories cannot be fully disaggregated. HRH and ER reporting from each implementing partner should have worked together to ensure alignment of reported staffing expenditures. 
+Table 2 provides a summary of USAID’s staffing size relative to the overall PEPFAR program in `r params$operating_unit`. This includes the total HRH staffing expenditure, individual count, full-time equivalence (FTE), and the percentage of total expenditure going towards HRH. This information serves as an indicator for USAID’s level of staffing investment in the country relative to other implementing agencies’ HRH investments.
 
 ```{r echo = FALSE, eval = TRUE}
 
@@ -202,7 +200,7 @@ Overall, about `r pct_USAID` of PEPFAR's HRH expenditures are channeled through 
 
 ## `r params$fiscal_year` Staffing by Funding Agency
 
-Figure 1 provides a summary of the total staffing expenditure and total headcount supported by each PEPFAR implementing agency (USAID, CDC, and Other) for implementation of FY24 program activities.
+Figure 1 provides a summary of the total staffing expenditure and total headcount supported by each PEPFAR implementing agency (USAID, CDC, and Other agencies) for implementation of FY24 program activities.
 
 ```{r fig1, fig.height = 6, fig.width = 10, echo = FALSE, eval = TRUE}
 
@@ -282,7 +280,7 @@ g3
 
 Figure 2 shows the top five prime partners with the highest HRH expenditure for USAID in `r params$operating_unit`. Each prime partner is disaggregated by primary program area to indicate the program activities that each partner is engaged in. Additional partner-level or mechanism-level deep dives can be provided upon request.
 
-```{r fig10, fig.height = 6, fig.width = 10, echo = FALSE, eval = TRUE}
+```{r fig10, fig.height = 8, fig.width = 10, echo = FALSE, eval = TRUE}
 
 # Pull names of top 5 partners only
 top_5_partners <- HRH_clean %>%
@@ -316,7 +314,7 @@ prime_partners <- HRH_clean %>%
   geom_bar(stat = "identity", width = 0.7) +
     
   geom_label_repel(data = prime_partners, aes(label=scales::dollar(round(actual_annual_spend))),
-             size = 3,
+             size = 4,
              position = position_stack(vjust = 0.5),
              min.segment.length = 0.25,
           #   direction = "x",
@@ -339,8 +337,8 @@ prime_partners <- HRH_clean %>%
     
   theme_tq() +
   
-  theme(plot.title = element_text(size = 10),
-        text = element_text(size = 10),
+  theme(plot.title = element_text(size = 14),
+        text = element_text(size = 14),
         axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1)) 
 
 ```
@@ -395,7 +393,7 @@ g1 <- ggplot(data = patchwork, mapping = aes(x = reorder(program, -actual_annual
   
     theme_tq() +
   
-    labs(title = stringr::str_glue("Individual Count by Program Area")) +
+    labs(title = stringr::str_glue("Individual Count")) +
     theme(axis.line=element_blank(),
         axis.text.y=element_blank(),
         axis.ticks=element_blank(),
@@ -427,7 +425,7 @@ g2 <- ggplot(data = patchwork, mapping = aes(x = reorder(program, -actual_annual
   
     theme_tq() +
   
-    labs(title = stringr::str_glue("HRH Expenditure by Program Area")) +
+    labs(title = stringr::str_glue("HRH Expenditure")) +
     theme(axis.line=element_blank(),
         axis.text.y=element_blank(),
         axis.ticks=element_blank(),
@@ -437,7 +435,7 @@ g2 <- ggplot(data = patchwork, mapping = aes(x = reorder(program, -actual_annual
         plot.title = element_text(size = 15),
         text = element_text(size = 18)) 
    
-g3 <- g2 + g1
+g3 <- g2 + g1 + plot_annotation('Figure 3: HRH Expenditure and Individual Count by Primary Program Area', theme=theme(plot.title=element_text(size=15)))
 
 g3
 
@@ -446,102 +444,13 @@ Key: PM = Program Management, ASP = Above Site Programming, C&T = Care and Treat
 
 \pagebreak
 
-## Top Employment Titles Based on Individual Count
-Figure 4 shows the top five employment titles supported by PEPFAR USAID based on individual count. The total expenditure for each title is also provided. Across PEPFAR-supported countries, the employment titles with the highest staff count are typically community-based staff providing direct service delivery.
+## Top Employment Titles Based on HRH Expenditure or Individual Count
+Figure 4 shows the top five employment titles supported by PEPFAR USAID based on HRH expenditure or Individual Count. Across PEPFAR-supported countries, employment titles with the highest HRH expenditure are typically above site, non-service delivery staff. Additionally, the employment titles with the highest staff count are typically community-based staff providing direct service delivery.
 
-```{r fig3, fig.height = 4, fig.width = 7, echo = FALSE, eval = TRUE}
-
-# Create a df that shows individual count by the top 10 employment title
-patchwork <- HRH_clean %>%
-  filter(fiscal_year == 2024) %>%
-  filter(funding_agency == "USAID") %>%
-  filter(operating_unit == params$operating_unit) %>%
-  select(fiscal_year, funding_agency, employment_title, actual_annual_spend, individual_count) %>%
-  group_by(employment_title) %>%
-  summarise(actual_annual_spend = sum(actual_annual_spend, na.rm = T),
-            individual_count = sum(individual_count, na.rm = T)) %>%
-  arrange(desc(individual_count)) %>%
-  top_n(n = 5, wt = individual_count) %>%
-  ungroup() %>%
-  mutate(employment_title_wrapped = str_wrap(employment_title, width = 10)) %>%
-  select(-employment_title)
-
-# Make the first plot
-g1 <- ggplot(data = patchwork, mapping = aes(x = reorder(employment_title_wrapped, -actual_annual_spend), y = individual_count, fill = employment_title_wrapped)) +
-    geom_col(alpha = 0.9,
-        width = 0.8) +
-  
-    scale_fill_manual(values = c("#c43d4d", 
-                              "#e07653", 
-                              "#2057a7",
-                              "#1e87a5",
-                              "#8980cb",
-                              "#808080")) +
-  
-    geom_label_repel(data = patchwork, aes(label = scales::comma(round(individual_count))),
-             size = 3,
-             position = "identity",
-             min.segment.length = 0.25,
-             direction = "y",
-             show.legend = FALSE) +
-  
-    theme_tq() +
-  
-    labs(title = stringr::str_glue("Individual Count")) +
-    theme(axis.line=element_blank(),
-        axis.text.y=element_blank(),
-        axis.ticks=element_blank(),
-        axis.title.x=element_blank(),
-        axis.title.y=element_blank(),
-        legend.position    = "none",
-        plot.title = element_text(size = 10),
-        axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1)) 
-
-# Make the second plot
-
-g2 <- ggplot(data = patchwork, mapping = aes(x = reorder(employment_title_wrapped, -actual_annual_spend), y = actual_annual_spend, fill = employment_title_wrapped)) +
-    geom_col(alpha = 0.9,
-        width = 0.8) +
-  
-    scale_fill_manual(values = c("#c43d4d", 
-                              "#e07653", 
-                              "#2057a7",
-                              "#1e87a5",
-                              "#8980cb",
-                              "#808080")) +
-  
-    geom_label_repel(data = patchwork, aes(label = scales::dollar(round(actual_annual_spend))),
-             size = 3,
-             position = "identity",
-             min.segment.length = 0.25,
-             direction = "y",
-             show.legend = FALSE) +
-  
-    theme_tq() +
-  
-    labs(title = stringr::str_glue("HRH Expenditure")) +
-    theme(axis.line=element_blank(),
-        axis.text.y=element_blank(),
-        axis.ticks=element_blank(),
-        axis.title.x=element_blank(),
-        axis.title.y=element_blank(),
-        legend.position    = "none",
-        plot.title = element_text(size = 10),
-        axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1)) 
-   
-g3 <- g2 + g1 + plot_annotation('Figure 4: Top Employment Titles by Individual Count (along with their HRH expenditure)', theme=theme(plot.title=element_text(size=10)))
-
-g3
-
-```
-
-## Top Employment Titles Based on HRH Expenditure
-Figure 5 shows the top five employment titles supported by PEPFAR USAID based on HRH expenditure. Counts for each are also provided. Across PEPFAR-supported countries, employment titles with the highest HRH expenditure are typically above site, non-service delivery staff.
-
-```{r fig4, fig.height = 4, fig.width = 7, echo = FALSE, eval = TRUE}
+```{r fig4, fig.height = 7, fig.width = 6, echo = FALSE, eval = TRUE}
 
 # Create a df that shows HRH expenditure by the top 5 employment title
-patchwork <- HRH_clean %>%
+patchwork_expenditure <- HRH_clean %>%
   filter(fiscal_year == 2024) %>%
   filter(funding_agency == "USAID") %>%
   filter(operating_unit == params$operating_unit) %>%
@@ -555,19 +464,35 @@ patchwork <- HRH_clean %>%
   mutate(employment_title_wrapped = str_wrap(employment_title, width = 10)) %>%
   select(-employment_title)
 
-# Make the first plot
-g1 <- ggplot(data = patchwork, mapping = aes(x = reorder(employment_title_wrapped, -actual_annual_spend), y = individual_count, fill = employment_title_wrapped)) +
+# Create a df that shows individual count by the top 10 employment title
+patchwork_count <- HRH_clean %>%
+  filter(fiscal_year == 2024) %>%
+  filter(funding_agency == "USAID") %>%
+  filter(operating_unit == params$operating_unit) %>%
+  select(fiscal_year, funding_agency, employment_title, actual_annual_spend, individual_count) %>%
+  group_by(employment_title) %>%
+  summarise(actual_annual_spend = sum(actual_annual_spend, na.rm = T),
+            individual_count = sum(individual_count, na.rm = T)) %>%
+  arrange(desc(individual_count)) %>%
+  top_n(n = 5, wt = individual_count) %>%
+  ungroup() %>%
+  mutate(employment_title_wrapped = str_wrap(employment_title, width = 10)) %>%
+  select(-employment_title)
+
+# Top graph for top titles by expenditure
+
+g1 <- ggplot(data = patchwork_expenditure, mapping = aes(x = reorder(employment_title_wrapped, -actual_annual_spend), y = actual_annual_spend, fill = employment_title_wrapped)) +
     geom_col(alpha = 0.9,
         width = 0.8) +
   
-    scale_fill_manual(values = c("#c43d4d", 
-                              "#e07653", 
+    scale_fill_manual(values = c("#2057a7", 
+                              "#2057a7", 
                               "#2057a7",
-                              "#1e87a5",
-                              "#8980cb",
-                              "#808080")) +
+                              "#2057a7",
+                              "#2057a7",
+                              "#2057a7")) +
   
-    geom_label_repel(data = patchwork, aes(label = scales::comma(round(individual_count))),
+        geom_label_repel(data = patchwork_expenditure, aes(label = scales::dollar(round(actual_annual_spend))),
              size = 3,
              position = "identity",
              min.segment.length = 0.25,
@@ -576,7 +501,7 @@ g1 <- ggplot(data = patchwork, mapping = aes(x = reorder(employment_title_wrappe
   
     theme_tq() +
   
-    labs(title = stringr::str_glue("Individual Count")) +
+    labs(title = stringr::str_glue("Top 5 using HRH Expenditure")) +
     theme(axis.line=element_blank(),
         axis.text.y=element_blank(),
         axis.ticks=element_blank(),
@@ -584,22 +509,22 @@ g1 <- ggplot(data = patchwork, mapping = aes(x = reorder(employment_title_wrappe
         axis.title.y=element_blank(),
         legend.position    = "none",
         plot.title = element_text(size = 10),
-        axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1)) 
+        axis.text.x = element_text(size = 10, angle = 45, vjust = 1, hjust = 1)) 
 
-# Make the second plot
+# Bottom graph for titles by count
 
-g2 <- ggplot(data = patchwork, mapping = aes(x = reorder(employment_title_wrapped, -actual_annual_spend), y = actual_annual_spend, fill = employment_title_wrapped)) +
+g2 <- ggplot(data = patchwork_count, mapping = aes(x = reorder(employment_title_wrapped, -individual_count), y = individual_count, fill = employment_title_wrapped)) +
     geom_col(alpha = 0.9,
         width = 0.8) +
   
-    scale_fill_manual(values = c("#c43d4d", 
-                              "#e07653", 
-                              "#2057a7",
+    scale_fill_manual(values = c("#1e87a5", 
+                              "#1e87a5", 
                               "#1e87a5",
-                              "#8980cb",
-                              "#808080")) +
+                              "#1e87a5",
+                              "#1e87a5",
+                              "#1e87a5")) +
   
-        geom_label_repel(data = patchwork, aes(label = scales::dollar(round(actual_annual_spend))),
+    geom_label_repel(data = patchwork_count, aes(label = scales::comma(round(individual_count))),
              size = 3,
              position = "identity",
              min.segment.length = 0.25,
@@ -608,7 +533,7 @@ g2 <- ggplot(data = patchwork, mapping = aes(x = reorder(employment_title_wrappe
   
     theme_tq() +
   
-    labs(title = stringr::str_glue("HRH Expenditure")) +
+    labs(title = stringr::str_glue("Top 5 using Individual Count")) +
     theme(axis.line=element_blank(),
         axis.text.y=element_blank(),
         axis.ticks=element_blank(),
@@ -616,19 +541,18 @@ g2 <- ggplot(data = patchwork, mapping = aes(x = reorder(employment_title_wrappe
         axis.title.y=element_blank(),
         legend.position    = "none",
         plot.title = element_text(size = 10),
-        axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1)) 
-   
-g3 <- g2 + g1 + plot_annotation('Figure 5: Top Employment Titles by HRH Expenditure (along with their Individual Count)', theme=theme(plot.title=element_text(size=10)))
+        axis.text.x = element_text(size = 10, angle = 45, vjust = 1, hjust = 1)) 
 
 
-g3
+g1 / g2 + plot_annotation('Figure 4: Top 5 Employment Titles by HRH Expenditure, or by Individual Count', theme=theme(plot.title=element_text(size=10)))
+
 
 ```
 
 \pagebreak
 
 ## `r params$fiscal_year` Median Annual Remuneration
-Figure 6 presents a scatter plot that shows the median annual remuneration (i.e. based on estimated annual salary) of the top 10 employment titles across all USAID Implementing Partners. Each dot represents an individual’s estimated annual remuneration, and the black line represents the median annual remuneration for the employment title. The density of the dots reflects the number of individuals contributing to the median, and the range can be interpreted via the spread of the individual dots.
+Figure 5 presents a scatter plot that shows the median annual remuneration (i.e. based on estimated annual salary) of the top 10 employment titles across all USAID Implementing Partners. Each dot represents an individual’s estimated annual remuneration, and the black line represents the median annual remuneration for the employment title. The density of the dots reflects the number of individuals contributing to the median, and the range can be interpreted via the spread of the individual dots.
 
 ```{r fig5, fig.height = 8, fig.width = 10, echo = FALSE, eval = TRUE}
 
@@ -637,14 +561,16 @@ remuneration <- HRH_clean %>%
   filter(fiscal_year == 2024) %>%
   filter(funding_agency == "USAID") %>%
   filter(operating_unit == params$operating_unit) %>%
+  filter(avg_fte_per_month == 1 ) %>%
+  filter(months_of_work >= 8) %>%
   select(employment_title, equivalent_annual_salary)
 
 # Remove any extreme outliers, since we do not want to visualize them in our box plot
 detect_outlier <- function(x) {
   # calculate first quantile
-  Quantile1 <- quantile(x, probs=.01)
+  Quantile1 <- quantile(x, probs=.001)
   # calculate third quantile
-  Quantile3 <- quantile(x, probs=.98)
+  Quantile3 <- quantile(x, probs=.999)
   # calculate inter quartile range
   IQR = Quantile3-Quantile1
   # return true or false
@@ -664,7 +590,7 @@ remove_outlier <- function(dataframe,
 }
 
 # Now use the function to remove extreme outliers from our remuneration df
-remuneration <- remove_outlier(remuneration, 'equivalent_annual_salary')
+#remuneration <- remove_outlier(remuneration, 'equivalent_annual_salary')
 
 # Calculate the median annual remuneration by employment title, filter for top 10 titles, pull the titles, and use this as a sorting variable
 sort_list <- remuneration %>%
@@ -696,7 +622,7 @@ ggplot(remuneration,
   
   labs(x = "Employment Title", y = "Median Annual Remuneration") + 
   
-  plot_annotation('Figure 6: Median Annual Remuneration for Top 10 Employment Titles', theme=theme(plot.title=element_text(size=16))) +
+  plot_annotation('Figure 5: Median Annual Remuneration for Top 10 Employment Titles', theme=theme(plot.title=element_text(size=16))) +
 
   
   scale_fill_manual(values = rep(NA, 2)) +
@@ -716,7 +642,7 @@ ggplot(remuneration,
 \pagebreak
 
 ## Local Partners
-In support of USAID’s localization goal, Figure 7 shows how much of USAID’s HRH expenditure is channeled through prime local partners for each primary program area. Note that Local Partners here are defined as local organizations that were awarded as the prime partner, and not as sub-awardees/subrecipients. If a local organization is a subrecipient while the prime partner is an international organization for a given mechanism, then the subrecipient's staffing expenditures will be considered as non-local. While incomplete in terms of the overall localization goal picture, this figure can provide an indication of the level of prime local partner support for HRH in PEPFAR USAID programming.
+In support of USAID’s localization goal, Figure 6 shows how much of USAID’s HRH expenditure is channeled through prime local partners for each primary program area. Note that Local Partners here are defined as local organizations that were awarded as the prime partner, and not as sub-awardees/subrecipients. If a local organization is a subrecipient while the prime partner is an international organization for a given mechanism, then the subrecipient's staffing expenditures will be considered as non-local. While incomplete in terms of the overall localization goal picture, this figure can provide an indication of the level of prime local partner support for HRH in PEPFAR USAID programming.
 
 ```{r fig6, fig.height = 5, fig.width = 6, echo = FALSE, eval = TRUE}
 
@@ -753,30 +679,61 @@ local_partner <- HRH_clean %>%
     
   labs(fill = "Prime Local Partner?") +
     
-  plot_annotation('Figure 7: Prime Local Partner Support of HRH by Primary Program Area', theme=theme(plot.title=element_text(size=10))) +
+  plot_annotation('Figure 6: Prime Local Partner Support of HRH by Primary Program Area', theme=theme(plot.title=element_text(size=10))) +
     
   scale_y_continuous(labels = label_dollar()) +
     
   scale_fill_manual(values = c("Local" = "#1e87a5",
                               "International" = "#808080")) +
+  
+  theme_tq() +
 
   theme(panel.background = element_rect(fill = "white"),
         axis.line=element_blank(),
-        axis.text.y=element_blank(),
         axis.ticks=element_blank(),
-        axis.title.x=element_blank(),
-        axis.title.y=element_blank(),
         plot.title = element_text(size = 10),
-        text = element_text(size = 10)) +
+        text = element_text(size = 10)) 
   
-  theme_tq() 
+## Additionally, calculate the % of HRH expenditures channeled through prime local partners
   
+  Local_pct <- HRH_clean %>%
+    filter(fiscal_year == 2024) %>%
+    filter(funding_agency == "USAID") %>%
+    filter(operating_unit == params$operating_unit) %>%
+    select(fiscal_year, funding_agency, program, is_indigenous_prime_partner, actual_annual_spend) %>%
+    mutate(is_indigenous_prime_partner = case_when(is_indigenous_prime_partner == "Y" ~"Yes",
+                                                   is_indigenous_prime_partner == "N" ~ "No",
+                                                   TRUE ~ is_indigenous_prime_partner)) %>%
+    group_by(is_indigenous_prime_partner) %>%
+    summarise(actual_annual_spend = sum(actual_annual_spend, na.rm = T)) %>%
+    arrange(desc(actual_annual_spend)) %>%
+    mutate(pct_of_total = round((actual_annual_spend / sum(actual_annual_spend))*100)) %>%
+    filter(is_indigenous_prime_partner == "Local") %>%
+    pull(pct_of_total)
+  
+  International_pct <- HRH_clean %>%
+    filter(fiscal_year == 2024) %>%
+    filter(funding_agency == "USAID") %>%
+    filter(operating_unit == params$operating_unit) %>%
+    select(fiscal_year, funding_agency, program, is_indigenous_prime_partner, actual_annual_spend) %>%
+    mutate(is_indigenous_prime_partner = case_when(is_indigenous_prime_partner == "Y" ~"Yes",
+                                                   is_indigenous_prime_partner == "N" ~ "No",
+                                                   TRUE ~ is_indigenous_prime_partner)) %>%
+    group_by(is_indigenous_prime_partner) %>%
+    summarise(actual_annual_spend = sum(actual_annual_spend, na.rm = T)) %>%
+    arrange(desc(actual_annual_spend)) %>%
+    mutate(pct_of_total = round((actual_annual_spend / sum(actual_annual_spend))*100)) %>%
+    filter(is_indigenous_prime_partner == "International") %>%
+    pull(pct_of_total)
+
 ```
+
+Overall, `r Local_pct`% of HRH Expenditure is channeled through Prime Local Partners, while `r International_pct`% is channeled through Prime International Partners.
 
 \pagebreak
 
 ## Work Location
-Figure 8 shows the work location of USAID staff by HRH expenditure and individual count. Categories include above site, facility-based, community-based, or roving. Above site staff are defined as personnel that are not directly interacting or providing services to beneficiaries (e.g. technical assistance personnel or support staff based mostly in offices). Roving staff provide direct service delivery in multiple facilities. 
+Figure 7 shows the work location of USAID staff by HRH expenditure and individual count. Categories include above site, facility-based, community-based, or roving. Above site staff are defined as personnel that are not directly interacting or providing services to beneficiaries (e.g. technical assistance personnel or support staff based mostly in offices). Roving staff provide direct service delivery in multiple facilities. 
 
 This figure can provide an illustration of the balance of facility and non-facility-based staff. The distribution required in a given PEPFAR-supported country will be determined by program needs. 
 
@@ -821,7 +778,7 @@ g1 <- ggplot(data = patchwork, mapping = aes(x = reorder(work_location, -actual_
         axis.title.y=element_blank(),
         legend.position    = "none",
         plot.title = element_text(size = 14),
-        text = element_text(size = 16)) 
+        text = element_text(size = 14)) 
 
 # Make the second plot
 
@@ -841,7 +798,7 @@ g2 <- ggplot(data = patchwork, mapping = aes(x = reorder(work_location, -actual_
              direction = "y",
              show.legend = FALSE) +
   
-  plot_annotation('Figure 8: HRH Expenditure and Individual Count by Work Location', theme=theme(plot.title=element_text(size=14))) +
+  plot_annotation('Figure 7: HRH Expenditure and Individual Count by Work Location', theme=theme(plot.title=element_text(size=14))) +
   
     theme_tq() +
   
@@ -853,7 +810,7 @@ g2 <- ggplot(data = patchwork, mapping = aes(x = reorder(work_location, -actual_
         axis.title.y=element_blank(),
         legend.position    = "none",
         plot.title = element_text(size = 14),
-        text = element_text(size = 16)) 
+        text = element_text(size = 14)) 
    
 g3 <- g2 + g1
 
@@ -863,29 +820,61 @@ g3
 
 \pagebreak
 
-## Top Employment Titles for Community-Based Staff
-Figure 9 shows the top five employment titles for community-based staff by count. Moving towards sustainable programming will require comparing PEPFAR-supported employment titles and job functions with local government- and private sector-supported positions/functions and considering pathways to sustainability for the PEPFAR-supported workforce. 
+## Top Employment Titles for each Work Location
+Figure 8 shows the top five employment titles for Facility/Roving staff, Community-based Staff, and Above Site Staff using Individual Count. Moving towards sustainable programming will require comparing PEPFAR-supported employment titles and job functions with local government and private sector-supported positions/functions, and considering pathways to sustainability for the PEPFAR-supported workforce. 
 
-```{r fig8, fig.height = 5, fig.width = 8, echo = FALSE, eval = TRUE}
+```{r fig8, fig.height = 10, fig.width = 10, echo = FALSE, eval = TRUE}
 
 # Create a df that shows HRH expenditure and individual count by the top 5 community titles
-patchwork <- HRH_clean %>%
+patchwork_community <- HRH_clean %>%
   filter(fiscal_year == 2024) %>%
   filter(funding_agency == "USAID") %>%
   filter(operating_unit == params$operating_unit) %>%
-  filter(is_community_primarily == "Yes") %>%
+  filter(work_location == "Community") %>%
   select(fiscal_year, work_location, employment_title, actual_annual_spend, individual_count) %>%
   group_by(employment_title) %>%
   summarise(actual_annual_spend = sum(actual_annual_spend, na.rm = T),
             individual_count = sum(individual_count, na.rm = T)) %>%
   top_n(n = 5, wt = individual_count) %>%
   ungroup() %>%
-  mutate(employment_title_wrapped = str_wrap(employment_title, width = 10)) %>%
-  select(-employment_title)
+#  mutate(employment_title_wrapped = str_wrap(employment_title, width = 10)) %>%
+#  select(-employment_title) %>%
+  mutate(work_location = "Community")
 
-# Make the column graph
-g1 <- patchwork %>%
-    ggplot(aes(x = reorder(employment_title_wrapped, individual_count))) +
+patchwork_facility_roving <- HRH_clean %>%
+  filter(fiscal_year == 2024) %>%
+  filter(funding_agency == "USAID") %>%
+  filter(operating_unit == params$operating_unit) %>%
+  filter(work_location == "Facility" | work_location == "Roving") %>%
+  select(fiscal_year, work_location, employment_title, actual_annual_spend, individual_count) %>%
+  group_by(employment_title) %>%
+  summarise(actual_annual_spend = sum(actual_annual_spend, na.rm = T),
+            individual_count = sum(individual_count, na.rm = T)) %>%
+  top_n(n = 5, wt = individual_count) %>%
+  ungroup() %>%
+#  mutate(employment_title_wrapped = str_wrap(employment_title, width = 10)) %>%
+#  select(-employment_title) %>%
+  mutate(work_location = "Facility/Roving")
+
+patchwork_aboveSite <- HRH_clean %>%
+  filter(fiscal_year == 2024) %>%
+  filter(funding_agency == "USAID") %>%
+  filter(operating_unit == params$operating_unit) %>%
+  filter(work_location == "Above Site") %>%
+  select(fiscal_year, work_location, employment_title, actual_annual_spend, individual_count) %>%
+  group_by(employment_title) %>%
+  summarise(actual_annual_spend = sum(actual_annual_spend, na.rm = T),
+            individual_count = sum(individual_count, na.rm = T)) %>%
+  top_n(n = 5, wt = individual_count) %>%
+  ungroup() %>%
+#  mutate(employment_title_wrapped = str_wrap(employment_title, width = 10)) %>%
+#  select(-employment_title) %>%
+  mutate(work_location = "Above Site")
+
+
+# Facility/Roving chart
+g1 <- patchwork_facility_roving %>%
+    ggplot(aes(x = reorder(employment_title, individual_count))) +
     geom_col(
         aes(y = individual_count, fill = "Individual Count"),
         alpha = 0.9,
@@ -904,9 +893,10 @@ g1 <- patchwork %>%
   
   theme_tq() +
   
+  labs(title = stringr::str_glue("Facility or Roving Staff")) +
+  
   theme(axis.line=element_blank(),
-        axis.ticks=element_blank(),
-        plot.title = element_text(size = 10),
+        plot.title = element_text(size = 14),
         text = element_text(size = 14)) +
   
     scale_color_manual(values = c(
@@ -923,14 +913,97 @@ g1 <- patchwork %>%
   
     coord_flip()
 
-g1 + plot_annotation('Figure 9: Top Five Employment Titles for Community-Based Staff by Individual Count', theme=theme(plot.title=element_text(size=14))) 
+# Community chart
+
+g2 <- patchwork_community %>%
+    ggplot(aes(x = reorder(employment_title, individual_count))) +
+    geom_col(
+        aes(y = individual_count, fill = "Individual Count"),
+        alpha = 0.9,
+        width = 0.8
+    ) +
+    geom_label(
+        aes(
+            y     = individual_count,
+            label = scales::comma(round(individual_count)),
+            color = "Individual Count",
+        ),
+        size = 4
+    ) +
+  
+  ylab("Individual Count") + 
+  
+  theme_tq() +
+  
+  labs(title = stringr::str_glue("Community-based Staff")) +
+  
+  theme(axis.line=element_blank(),
+        plot.title = element_text(size = 14),
+        text = element_text(size = 14)) +
+  
+    scale_color_manual(values = c(
+        palette_light()[["blue"]]
+    )) +
+  
+    scale_fill_manual(values = palette_light()[["blue"]]) +
+    theme(
+        legend.position    = "none",
+        axis.title.y=element_blank()
+    ) +
+
+    scale_y_continuous(labels = scales::comma_format()) +
+  
+    coord_flip()
+
+# Above Site chart
+
+g3 <- patchwork_aboveSite %>%
+    ggplot(aes(x = reorder(employment_title, individual_count))) +
+    geom_col(
+        aes(y = individual_count, fill = "Individual Count"),
+        alpha = 0.9,
+        width = 0.8
+    ) +
+    geom_label(
+        aes(
+            y     = individual_count,
+            label = scales::comma(round(individual_count)),
+            color = "Individual Count",
+        ),
+        size = 4
+    ) +
+  
+  ylab("Individual Count") + 
+  
+  theme_tq() +
+  
+  labs(title = stringr::str_glue("Above Site Staff")) +
+  
+  theme(axis.line=element_blank(),
+        plot.title = element_text(size = 14),
+        text = element_text(size = 14)) +
+  
+    scale_color_manual(values = c(
+        palette_light()[["blue"]]
+    )) +
+  
+    scale_fill_manual(values = palette_light()[["blue"]]) +
+    theme(
+        legend.position    = "none",
+        axis.title.y=element_blank()
+    ) +
+
+    scale_y_continuous(labels = scales::comma_format()) +
+  
+    coord_flip()
+
+g1 / g2 / g3 + plot_annotation('Figure 8: Top Five Employment Titles for Facility/Roving, Community, and Above Site staff', theme=theme(plot.title=element_text(size=14))) 
 
 ```
 
 \pagebreak
-
-## Top Primary Beneficiaries for Community-Based Staff
-This shows the top primary beneficiaries supported of community-based staff by individual count
+## Primary Beneficiaries for Community-based Staff
+Figure 9 shows the breakdown of primary beneficiaries supported by Community-based staff by HRH Expenditure and Individual Count
 
 ```{r fig9, fig.height = 5, fig.width = 8, echo = FALSE, eval = TRUE}
 
@@ -1015,7 +1088,7 @@ g2 <- ggplot(data = patchwork, mapping = aes(x = reorder(beneficiary_wrapped, -a
         text = element_text(size = 13),
         axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1)) 
    
-g3 <- g2 + g1 + plot_annotation('Figure 10: Top Primary Beneficiaries for Community-Based Staff by Individual Count and HRH Expenditure', theme=theme(plot.title=element_text(size=12)))
+g3 <- g2 + g1 + plot_annotation('Figure 9: Primary Beneficiaries of Community-based staff', theme=theme(plot.title=element_text(size=12)))
 
 g3
 
